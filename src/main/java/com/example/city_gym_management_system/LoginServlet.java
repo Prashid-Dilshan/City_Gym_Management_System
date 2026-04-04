@@ -16,8 +16,14 @@ public class LoginServlet extends HttpServlet {
         String password = request.getParameter("password");
         String role = request.getParameter("role");
 
+        if (role == null) {
+            request.setAttribute("error", "Please select a role.");
+            request.getRequestDispatcher("login.jsp").forward(request, response);
+            return;
+        }
+
         // Admin check
-        if (role.equals("admin") && username.equals("addmin") && password.equals("123")) {
+        if (role.equals("admin") && username.equals("admin") && password.equals("123")) {
 
             request.getSession().setAttribute("userRole", "admin");
             response.sendRedirect("admin_dashboard.jsp");
