@@ -135,7 +135,7 @@
 
 <div id="popup" style="display:none; position:fixed; top:10%; left:30%; width:40%; background:white; padding:20px; border:2px solid black;">
 
-  <form action="save-member" method="post">
+  <form action="save-member" method="post" enctype="multipart/form-data">
 
     <input type="hidden" name="userId" id="userId">
 
@@ -147,25 +147,30 @@
     Age: <input type="number" name="age"><br>
     WhatsApp: <input type="text" name="whatsapp"><br>
     Address: <input type="text" name="address"><br>
-    Height: <input type="text" name="height"><br>
-    Weight: <input type="text" name="weight"><br>
+
+    <!-- 🔥 PHOTO -->
+    Photo: <input type="file" name="photo"><br>
 
     <h3>Package</h3>
 
+    <!-- 🔥 1–12 MONTHS -->
     <select name="months" onchange="calc(this.value)">
-      <option value="1">1 Month</option>
-      <option value="3">3 Months</option>
-      <option value="6">6 Months</option>
-      <option value="12">12 Months</option>
+      <% for(int m=1; m<=12; m++){ %>
+      <option value="<%=m%>"><%=m%> Month</option>
+      <% } %>
     </select><br>
 
     Start: <input type="date" id="startDate" name="startDate"><br>
     End: <input type="date" id="endDate" name="endDate"><br>
 
-    <button type="submit">Save</button>
-    <button type="button" onclick="closePopup()">Close</button>
+    <!-- 🔥 NEW FIELDS -->
+    Membership Amount: <input type="number" name="amount" required><br>
+    Registration Fee: <input type="number" name="regFee" required><br>
 
+    <button type="submit">Save</button>
   </form>
+
+  <button type="button" onclick="closePopup()">Close</button>
 </div>
 
 <!-- ================= JS ================= -->

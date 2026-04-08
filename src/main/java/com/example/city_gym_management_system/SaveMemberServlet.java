@@ -1,15 +1,20 @@
 package com.example.city_gym_management_system;
 
+import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
+import jakarta.servlet.ServletException;
+
 import java.io.IOException;
+import java.io.InputStream;
 import java.sql.*;
 
+@MultipartConfig
 @WebServlet("/save-member")
 public class SaveMemberServlet extends HttpServlet {
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
-            throws IOException {
+            throws IOException, ServletException {
 
         // ======================
         // 🔥 GET + CLEAN FID
@@ -20,38 +25,38 @@ public class SaveMemberServlet extends HttpServlet {
             fid = fid.replaceAll("[^0-9]", "").trim();
         }
 
-        System.out.println("FINAL FID: [" + fid + "]");
-
-        // ❌ STOP if invalid
         if (fid == null || fid.isEmpty()) {
-            System.out.println("❌ ERROR: FID EMPTY!");
             response.sendRedirect("fingerprint-data?page=users");
             return;
         }
 
         // ======================
-        // 🔥 GET FORM DATA
+        // 🔥 FORM DATA
         // ======================
         String name = request.getParameter("name");
         String phone = request.getParameter("phone");
         String gender = request.getParameter("gender");
         String whatsapp = request.getParameter("whatsapp");
         String address = request.getParameter("address");
-        String height = request.getParameter("height");
-        String weight = request.getParameter("weight");
 
-        int age = 0;
-        int months = 0;
-
-        try {
-            age = Integer.parseInt(request.getParameter("age"));
-            months = Integer.parseInt(request.getParameter("months"));
-        } catch (Exception e) {
-            System.out.println("⚠️ Age or months parse error");
-        }
+        int age = Integer.parseInt(request.getParameter("age"));
+        int months = Integer.parseInt(request.getParameter("months"));
 
         String start = request.getParameter("startDate");
         String end = request.getParameter("endDate");
+
+        double amount = Double.parseDouble(request.getParameter("amount"));
+        double regFee = Double.parseDouble(request.getParameter("regFee"));
+
+        // ======================
+        // 🔥 PHOTO (BLOB)
+        // ======================
+        Part filePart = request.getPart("photo");
+        InputStream photoStream = null;
+
+        if (filePart != null && filePart.getSize() > 0) {
+            photoStream = filePart.getInputStream();
+        }
 
         Connection con = null;
         PreparedStatement psCheck = null;
@@ -78,7 +83,6 @@ public class SaveMemberServlet extends HttpServlet {
             rs = psCheck.executeQuery();
 
             if (rs.next()) {
-                System.out.println("⚠️ Already exists: " + fid);
                 response.sendRedirect("fingerprint-data?page=users");
                 return;
             }
@@ -86,7 +90,9 @@ public class SaveMemberServlet extends HttpServlet {
             // ======================
             // 🔥 INSERT MEMBER
             // ======================
-            String q1 = "INSERT INTO member_details (fingerprint_id, full_name, phone, gender, age, whatsapp, address, height, weight) VALUES (?,?,?,?,?,?,?,?,?)";
+            String q1 = "INSERT INTO member_details " +
+                    "(fingerprint_id, full_name, phone, gender, age, whatsapp, address, photo) " +
+                    "VALUES (?,?,?,?,?,?,?,?)";
 
             ps1 = con.prepareStatement(q1, Statement.RETURN_GENERATED_KEYS);
 
@@ -97,14 +103,14 @@ public class SaveMemberServlet extends HttpServlet {
             ps1.setInt(5, age);
             ps1.setString(6, whatsapp);
             ps1.setString(7, address);
-            ps1.setString(8, height);
-            ps1.setString(9, weight);
 
-            int rows = ps1.executeUpdate();
-
-            if (rows == 0) {
-                throw new SQLException("❌ Member insert failed!");
+            if (photoStream != null) {
+                ps1.setBlob(8, photoStream);
+            } else {
+                ps1.setNull(8, Types.BLOB);
             }
+
+            ps1.executeUpdate();
 
             ResultSet keyRs = ps1.getGeneratedKeys();
             int memberId = 0;
@@ -114,15 +120,15 @@ public class SaveMemberServlet extends HttpServlet {
             }
 
             if (memberId == 0) {
-                throw new SQLException("❌ Member ID not generated!");
+                throw new SQLException("Member ID not generated!");
             }
-
-            System.out.println("✅ Member ID: " + memberId);
 
             // ======================
             // 🔥 INSERT MEMBERSHIP
             // ======================
-            String q2 = "INSERT INTO membership_details (member_id, months, start_date, end_date) VALUES (?,?,?,?)";
+            String q2 = "INSERT INTO membership_details " +
+                    "(member_id, months, start_date, end_date, amount, registration_fee) " +
+                    "VALUES (?,?,?,?,?,?)";
 
             ps2 = con.prepareStatement(q2);
 
@@ -130,10 +136,10 @@ public class SaveMemberServlet extends HttpServlet {
             ps2.setInt(2, months);
             ps2.setString(3, start);
             ps2.setString(4, end);
+            ps2.setDouble(5, amount);
+            ps2.setDouble(6, regFee);
 
             ps2.executeUpdate();
-
-            System.out.println("✅ Membership saved!");
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -145,9 +151,6 @@ public class SaveMemberServlet extends HttpServlet {
             try { if (con != null) con.close(); } catch (Exception e) {}
         }
 
-        // ======================
-        // 🔥 REDIRECT
-        // ======================
         response.sendRedirect("fingerprint-data?page=users");
     }
 }

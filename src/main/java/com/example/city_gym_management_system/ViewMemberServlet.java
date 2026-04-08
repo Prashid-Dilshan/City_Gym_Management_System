@@ -10,6 +10,11 @@ import jakarta.servlet.http.*;
 import java.io.IOException;
 import java.sql.*;
 
+import jakarta.servlet.annotation.MultipartConfig;
+import jakarta.servlet.http.Part;
+import java.io.InputStream;
+
+@MultipartConfig
 @WebServlet("/view-member")
 public class ViewMemberServlet extends HttpServlet {
 
@@ -21,17 +26,51 @@ public class ViewMemberServlet extends HttpServlet {
 
         String fid = request.getParameter("fid");
 
+
+// 🔥 IMAGE MODE (ADD THIS ONLY)
+        if ("image".equals(request.getParameter("type"))) {
+
+            try {
+                Connection con = DriverManager.getConnection(
+                        "jdbc:mysql://localhost:3306/gym_system",
+                        "root",
+                        "1234"
+                );
+
+                String sql = "SELECT photo FROM member_details WHERE fingerprint_id=?";
+                PreparedStatement ps = con.prepareStatement(sql);
+                ps.setString(1, fid);
+
+                ResultSet rs = ps.executeQuery();
+
+                if (rs.next()) {
+                    byte[] img = rs.getBytes("photo");
+
+                    if (img != null) {
+                        response.setContentType("image/jpeg");
+                        response.getOutputStream().write(img);
+                    }
+                }
+
+                con.close();
+                return; // 🔥 VERY IMPORTANT
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
         String name = "";
         String phone = "";
         String gender = "";
         int age = 0;
         String whatsapp = "";
         String address = "";
-        String height = "";
-        String weight = "";
         int months = 0;
         String startDate = "";
         String endDate = "";
+        double amount = 0;
+        double regFee = 0;
 
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
@@ -59,12 +98,13 @@ public class ViewMemberServlet extends HttpServlet {
                 age = rs.getInt("age");
                 whatsapp = rs.getString("whatsapp");
                 address = rs.getString("address");
-                height = rs.getString("height");
-                weight = rs.getString("weight");
 
                 months = rs.getInt("months");
                 startDate = rs.getString("start_date");
                 endDate = rs.getString("end_date");
+
+                amount = rs.getDouble("amount");
+                regFee = rs.getDouble("registration_fee");
             }
 
             rs.close();
@@ -82,17 +122,17 @@ public class ViewMemberServlet extends HttpServlet {
         request.setAttribute("age", age);
         request.setAttribute("whatsapp", whatsapp);
         request.setAttribute("address", address);
-        request.setAttribute("height", height);
-        request.setAttribute("weight", weight);
         request.setAttribute("months", months);
         request.setAttribute("startDate", startDate);
         request.setAttribute("endDate", endDate);
+        request.setAttribute("amount", amount);
+        request.setAttribute("regFee", regFee);
 
         request.getRequestDispatcher("view_member.jsp").forward(request, response);
     }
 
     // ======================
-    // 🔥 UPDATE + DELETE (POST)
+    // 🔥 UPDATE + DELETE
     // ======================
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
@@ -115,8 +155,6 @@ public class ViewMemberServlet extends HttpServlet {
             if ("delete".equals(action)) {
 
                 try {
-                    System.load("C:\\Windows\\System32\\jacob-1.21-x64.dll");
-
                     ActiveXComponent zk = new ActiveXComponent("zkemkeeper.ZKEM");
 
                     boolean isConnected = zk.invoke("Connect_Net",
@@ -125,33 +163,16 @@ public class ViewMemberServlet extends HttpServlet {
 
                     if (isConnected) {
 
-                        // 🔥 DELETE FINGERPRINT
-                        zk.invoke("SSR_DeleteEnrollData",
-                                new Variant(1),
-                                new Variant(fid),
-                                new Variant(12) // ALL fingers
-                        );
-
-                        // 🔥 DELETE USER
-                        zk.invoke("DeleteUserInfo",
-                                new Variant(1),
-                                new Variant(fid)
-                        );
-
+                        zk.invoke("SSR_DeleteEnrollData", new Variant(1), new Variant(fid), new Variant(12));
+                        zk.invoke("DeleteUserInfo", new Variant(1), new Variant(fid));
                         zk.invoke("RefreshData", new Variant(1));
                         zk.invoke("Disconnect");
-
-                        System.out.println("✅ Deleted from DEVICE: " + fid);
-
-                    } else {
-                        System.out.println("❌ Device not connected!");
                     }
 
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
 
-                // 🔥 DELETE FROM DB
                 String q1 = "DELETE ms FROM membership_details ms " +
                         "JOIN member_details md ON ms.member_id=md.id " +
                         "WHERE md.fingerprint_id=?";
@@ -173,21 +194,41 @@ public class ViewMemberServlet extends HttpServlet {
             // ======================
             if ("update".equals(action)) {
 
+
+                // 🔥 PHOTO UPDATE PART
+                Part filePart = request.getPart("photo");
+                InputStream photoStream = null;
+
+                boolean hasNewPhoto = false;
+
+                if (filePart != null && filePart.getSize() > 0) {
+                    photoStream = filePart.getInputStream();
+                    hasNewPhoto = true;
+                }
+
                 String name = request.getParameter("name");
                 String phone = request.getParameter("phone");
                 String gender = request.getParameter("gender");
                 int age = Integer.parseInt(request.getParameter("age"));
                 String whatsapp = request.getParameter("whatsapp");
                 String address = request.getParameter("address");
-                String height = request.getParameter("height");
-                String weight = request.getParameter("weight");
 
                 int months = Integer.parseInt(request.getParameter("months"));
                 String start = request.getParameter("startDate");
                 String end = request.getParameter("endDate");
 
-                // update member
-                String q1 = "UPDATE member_details SET full_name=?, phone=?, gender=?, age=?, whatsapp=?, address=?, height=?, weight=? WHERE fingerprint_id=?";
+                double amount = Double.parseDouble(request.getParameter("amount"));
+                double regFee = Double.parseDouble(request.getParameter("regFee"));
+
+                // 🔥 update member
+                String q1;
+
+                if (hasNewPhoto) {
+                    q1 = "UPDATE member_details SET full_name=?, phone=?, gender=?, age=?, whatsapp=?, address=?, photo=? WHERE fingerprint_id=?";
+                } else {
+                    q1 = "UPDATE member_details SET full_name=?, phone=?, gender=?, age=?, whatsapp=?, address=? WHERE fingerprint_id=?";
+                }
+
                 PreparedStatement ps1 = con.prepareStatement(q1);
 
                 ps1.setString(1, name);
@@ -196,23 +237,30 @@ public class ViewMemberServlet extends HttpServlet {
                 ps1.setInt(4, age);
                 ps1.setString(5, whatsapp);
                 ps1.setString(6, address);
-                ps1.setString(7, height);
-                ps1.setString(8, weight);
-                ps1.setString(9, fid);
+
+                if (hasNewPhoto) {
+                    ps1.setBlob(7, photoStream);
+                    ps1.setString(8, fid);
+                } else {
+                    ps1.setString(7, fid);
+                }
 
                 ps1.executeUpdate();
 
-                // update membership
+                // 🔥 update membership
                 String q2 = "UPDATE membership_details ms " +
                         "JOIN member_details md ON ms.member_id=md.id " +
-                        "SET ms.months=?, ms.start_date=?, ms.end_date=? " +
+                        "SET ms.months=?, ms.start_date=?, ms.end_date=?, ms.amount=?, ms.registration_fee=? " +
                         "WHERE md.fingerprint_id=?";
+
                 PreparedStatement ps2 = con.prepareStatement(q2);
 
                 ps2.setInt(1, months);
                 ps2.setString(2, start);
                 ps2.setString(3, end);
-                ps2.setString(4, fid);
+                ps2.setDouble(4, amount);
+                ps2.setDouble(5, regFee);
+                ps2.setString(6, fid);
 
                 ps2.executeUpdate();
 
