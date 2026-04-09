@@ -105,6 +105,6 @@
     <!-- ✅ Default load -->
     <iframe name="contentFrame" src="home.jsp"></iframe>
 </div>
-
+<script src="attendance-popup.js"></script>
 </body>
 </html>

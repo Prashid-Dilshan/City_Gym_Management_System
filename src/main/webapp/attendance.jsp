@@ -166,5 +166,6 @@
     setInterval(loadAttendance, 5000);
 </script>
 
+<script src="attendance-popup.js"></script>
 </body>
 </html>

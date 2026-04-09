@@ -27,36 +27,24 @@ public class FingerprintDataServlet extends HttpServlet {
         }
     }
 
-    // =========================
-    // 🔥 DO GET
-    // =========================
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        // ✅ Two separate lists — statusLogs for connection messages, attendanceLogs for table data
         List<String>              statusLogs     = new ArrayList<>();
         List<Map<String, String>> attendanceLogs = new ArrayList<>();
         List<String>              users          = new ArrayList<>();
         Set<String>               savedMembers   = new HashSet<>();
 
-        ActiveXComponent zk   = null;
-        String           page = request.getParameter("page");
+        String page = request.getParameter("page");
 
         try {
-            // =========================
-            // 🔥 LOAD MEMBERS FROM DB
-            // =========================
             Class.forName("com.mysql.cj.jdbc.Driver");
 
             Connection con = DriverManager.getConnection(
-                    "jdbc:mysql://localhost:3306/gym_system",
-                    "root",
-                    "1234"
-            );
+                    "jdbc:mysql://localhost:3306/gym_system", "root", "1234");
 
-            String sql = "SELECT md.fingerprint_id, md.full_name, md.admission_no, " +
-                    "ms.end_date " +
+            String sql = "SELECT md.fingerprint_id, md.full_name, md.admission_no, ms.end_date " +
                     "FROM member_details md " +
                     "LEFT JOIN membership_details ms ON md.id = ms.member_id";
 
@@ -77,7 +65,6 @@ public class FingerprintDataServlet extends HttpServlet {
                 dbUserMap.put(fid, name);
                 dbAdmissionMap.put(fid, admNo != null ? admNo : "-");
 
-                // Days remaining calculate
                 if (endDate != null) {
                     try {
                         java.time.LocalDate end   = java.time.LocalDate.parse(endDate);
@@ -99,7 +86,7 @@ public class FingerprintDataServlet extends HttpServlet {
             // =========================
             // 🔥 CONNECT DEVICE
             // =========================
-            zk = new ActiveXComponent("zkemkeeper.ZKEM");
+            ActiveXComponent zk = new ActiveXComponent("zkemkeeper.ZKEM");
 
             boolean isConnected = zk.invoke("Connect_Net",
                     new Variant("192.168.8.201"),
@@ -108,7 +95,6 @@ public class FingerprintDataServlet extends HttpServlet {
             if (!isConnected) {
                 statusLogs.add("❌ Device connection failed!");
             } else {
-
                 statusLogs.add("✅ Device Connected Successfully!");
                 userMap.clear();
 
@@ -128,11 +114,8 @@ public class FingerprintDataServlet extends HttpServlet {
             statusLogs.add("❌ Error: " + e.getMessage());
         }
 
-        // =========================
-        // 🔥 SEND DATA TO JSP
-        // =========================
-        request.setAttribute("statusLogs",     statusLogs);      // connection messages
-        request.setAttribute("attendanceLogs", attendanceLogs);  // table rows
+        request.setAttribute("statusLogs",     statusLogs);
+        request.setAttribute("attendanceLogs", attendanceLogs);
         request.setAttribute("users",          users);
         request.setAttribute("savedMembers",   savedMembers);
 
@@ -158,13 +141,7 @@ public class FingerprintDataServlet extends HttpServlet {
 
             while (true) {
                 Variant result = zk.invoke("SSR_GetAllUserInfo",
-                        new Variant(1),
-                        userId,
-                        name,
-                        password,
-                        privilege,
-                        enabled
-                );
+                        new Variant(1), userId, name, password, privilege, enabled);
 
                 if (!result.getBoolean()) break;
 
@@ -181,11 +158,21 @@ public class FingerprintDataServlet extends HttpServlet {
     }
 
     // =========================
-    // 🔥 READ ATTENDANCE LOGS
+    // 🔥 READ LOGS + SAVE TO DB
     // =========================
     private void readLogs(ActiveXComponent zk, List<Map<String, String>> attendanceLogs) {
+
+        Connection con = null;
+
         try {
+            con = DriverManager.getConnection(
+                    "jdbc:mysql://localhost:3306/gym_system", "root", "1234");
+
             zk.invoke("ReadGeneralLogData", new Variant(1));
+
+            // INSERT IGNORE — same fingerprint_id + scan_time duplicates skip
+            String insertSql = "INSERT IGNORE INTO attendance_log (fingerprint_id, scan_time) VALUES (?, ?)";
+            PreparedStatement insertPs = con.prepareStatement(insertSql);
 
             while (true) {
                 Variant userID     = new Variant("", true);
@@ -210,17 +197,16 @@ public class FingerprintDataServlet extends HttpServlet {
                 String admission = dbAdmissionMap.getOrDefault(id, "-");
                 String daysLeft  = dbDaysLeftMap.getOrDefault(id, "-");
 
-                // ✅ FIX: .getInt() වෙනුවට parseInt use කරනවා
-                String date = String.format("%04d-%02d-%02d",
-                        parseInt(year),
-                        parseInt(month),
-                        parseInt(day));
+                String date     = String.format("%04d-%02d-%02d", parseInt(year), parseInt(month), parseInt(day));
+                String time     = String.format("%02d:%02d:%02d", parseInt(hour), parseInt(minute), parseInt(second));
+                String scanTime = date + " " + time;
 
-                String time = String.format("%02d:%02d:%02d",
-                        parseInt(hour),
-                        parseInt(minute),
-                        parseInt(second));
+                // 🔥 SAVE TO DB
+                insertPs.setString(1, id);
+                insertPs.setString(2, scanTime);
+                insertPs.executeUpdate();
 
+                // 🔥 ADD TO DISPLAY LIST
                 Map<String, String> entry = new LinkedHashMap<>();
                 entry.put("id",        id);
                 entry.put("name",      name);
@@ -232,14 +218,17 @@ public class FingerprintDataServlet extends HttpServlet {
                 attendanceLogs.add(entry);
             }
 
+            insertPs.close();
+
         } catch (Exception e) {
             Map<String, String> err = new HashMap<>();
             err.put("error", "❌ Log error: " + e.getMessage());
             attendanceLogs.add(err);
+        } finally {
+            try { if (con != null) con.close(); } catch (Exception ignored) {}
         }
     }
 
-    // ✅ Safe parse helper method
     private int parseInt(Variant v) {
         try {
             return Integer.parseInt(v.toString().trim());
@@ -269,23 +258,11 @@ public class FingerprintDataServlet extends HttpServlet {
                         new Variant(4370)).getBoolean();
 
                 if (isConnected) {
-
-                    zk.invoke("SSR_DeleteEnrollData",
-                            new Variant(1),
-                            new Variant(fid),
-                            new Variant(12)
-                    );
-
-                    zk.invoke("DeleteUserInfo",
-                            new Variant(1),
-                            new Variant(fid)
-                    );
-
-                    zk.invoke("RefreshData", new Variant(1));
+                    zk.invoke("SSR_DeleteEnrollData", new Variant(1), new Variant(fid), new Variant(12));
+                    zk.invoke("DeleteUserInfo",        new Variant(1), new Variant(fid));
+                    zk.invoke("RefreshData",           new Variant(1));
                     zk.invoke("Disconnect");
-
                     System.out.println("✅ Deleted from device: " + fid);
-
                 } else {
                     System.out.println("❌ Device not connected!");
                 }

@@ -166,3 +166,5 @@
         }
     };
 </script>
+
+<script src="attendance-popup.js"></script>

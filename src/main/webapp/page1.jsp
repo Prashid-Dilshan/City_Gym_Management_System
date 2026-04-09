@@ -17,6 +17,6 @@
   <h2>Page 1</h2>
   <p>Welcome</p>
 </div>
-
+<script src="attendance-popup.js"></script>
 </body>
 </html>
