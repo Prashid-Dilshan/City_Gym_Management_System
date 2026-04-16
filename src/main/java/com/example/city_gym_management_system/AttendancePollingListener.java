@@ -83,31 +83,36 @@ public class AttendancePollingListener implements ServletContextListener {
                 java.time.LocalDate today = java.time.LocalDate.now();
                 java.time.LocalTime now = java.time.LocalTime.now();
 
-                if (now.getHour() == 0 && now.getMinute() < 5) {
 
-                    String todayStr = today.toString();
 
-                    if (!todayStr.equals(lastCleanDate)) {
+                //if (now.getHour() == 0 && now.getMinute() < 5) {
+                   // String todayStr = today.toString();
+                  //  if (!todayStr.equals(lastCleanDate)) {
+                        // 🔥 ONLY DEVICE LOGS CLEAR
+                      //  zk.invoke("ClearGLog", new Variant(1));
+                      //  System.out.println("🧹 Device logs cleared");
+                      //  lastCleanDate = todayStr;
+                   // }
+               // }
 
-                        // 🔥 1. CLEAR DEVICE LOGS
-                        zk.invoke("ClearGLog", new Variant(1));
-                        System.out.println("🧹 Device logs cleared");
 
-                        // 🔥 2. CLEAR DATABASE LOGS
-                        String deleteSql = "DELETE FROM attendance_log";
-                        PreparedStatement dps = con.prepareStatement(deleteSql);
-                        int count = dps.executeUpdate();
-                        dps.close();
+                String todayStr = java.time.LocalDate.now().toString();
 
-                        System.out.println("🧹 DB logs cleared: " + count);
+                if (!todayStr.equals(lastCleanDate)) {
 
-                        lastCleanDate = todayStr;
-                    }
+                    zk.invoke("ClearGLog", new Variant(1));
+                    System.out.println("🧹 Device logs cleared");
+
+                    lastCleanDate = todayStr;
                 }
+
+
+
+
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            // 🔥 ==================================================
+
 
             // 🔥 READ LOGS AFTER CLEAN
             zk.invoke("ReadGeneralLogData", new Variant(1));
