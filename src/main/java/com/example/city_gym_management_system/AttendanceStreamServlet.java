@@ -27,10 +27,7 @@ public class AttendanceStreamServlet extends HttpServlet {
 
         PrintWriter out = response.getWriter();
 
-        try {
-            Class.forName("com.mysql.cj.jdbc.Driver");
-            Connection con = DriverManager.getConnection(
-                    "jdbc:mysql://localhost:3306/gym_system", "root", "1234");
+        try (Connection con = DatabaseUtil.getConnection()) {
 
             // 🔥 KEY FIX: scan_time නෙමෙයි — inserted_at use කරනවා
             // inserted_at = server DB insert කළ real time
@@ -46,54 +43,61 @@ public class AttendanceStreamServlet extends HttpServlet {
                             "WHERE UNIX_TIMESTAMP(al.inserted_at) > ? " +
                             "ORDER BY al.inserted_at DESC LIMIT 1";
 
-            PreparedStatement ps = con.prepareStatement(sql);
-            ps.setLong(1, lastSeen);
-            ResultSet rs = ps.executeQuery();
+            try (PreparedStatement ps = con.prepareStatement(sql)) {
+                ps.setLong(1, lastSeen);
+                
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        String name     = rs.getString("full_name");
+                        String admNo    = rs.getString("admission_no");
+                        String scanTime = rs.getString("scan_time");
+                        long   ts       = rs.getLong("ts");
+                        String endDate  = rs.getString("end_date");
 
-            if (rs.next()) {
-                String name     = rs.getString("full_name");
-                String admNo    = rs.getString("admission_no");
-                String scanTime = rs.getString("scan_time");
-                long   ts       = rs.getLong("ts");
-                String endDate  = rs.getString("end_date");
+                        // Days remaining
+                        String daysLeft = "-";
+                        if (endDate != null) {
+                            try {
+                                java.time.LocalDate end   = java.time.LocalDate.parse(endDate);
+                                java.time.LocalDate today = java.time.LocalDate.now();
+                                long days = java.time.temporal.ChronoUnit.DAYS.between(today, end);
+                                daysLeft = days >= 0 ? days + " days" : "Expired";
+                            } catch (Exception ignored) {
+                                System.err.println("[APP WARNING] Error parsing end date: " + endDate);
+                            }
+                        }
 
-                // Days remaining
-                String daysLeft = "-";
-                if (endDate != null) {
-                    try {
-                        java.time.LocalDate end   = java.time.LocalDate.parse(endDate);
-                        java.time.LocalDate today = java.time.LocalDate.now();
-                        long days = java.time.temporal.ChronoUnit.DAYS.between(today, end);
-                        daysLeft = days >= 0 ? days + " days" : "Expired";
-                    } catch (Exception ignored) {}
+                        // Time only HH:mm:ss
+                        String timeOnly = (scanTime != null && scanTime.length() >= 19)
+                                ? scanTime.substring(11, 19) : (scanTime != null ? scanTime : "");
+
+                        // Safe JSON
+                        name  = safe(name);
+                        admNo = safe(admNo);
+
+                        out.print("{" +
+                                "\"found\":true,"          +
+                                "\"name\":\""     + name     + "\"," +
+                                "\"admNo\":\""    + admNo    + "\"," +
+                                "\"time\":\""     + timeOnly + "\"," +
+                                "\"daysLeft\":\"" + daysLeft + "\"," +
+                                "\"ts\":"         + ts       +
+                                "}");
+
+                    } else {
+                        out.print("{\"found\":false}");
+                    }
                 }
-
-                // Time only HH:mm:ss
-                String timeOnly = (scanTime != null && scanTime.length() >= 19)
-                        ? scanTime.substring(11, 19) : (scanTime != null ? scanTime : "");
-
-                // Safe JSON
-                name  = safe(name);
-                admNo = safe(admNo);
-
-                out.print("{" +
-                        "\"found\":true,"          +
-                        "\"name\":\""     + name     + "\"," +
-                        "\"admNo\":\""    + admNo    + "\"," +
-                        "\"time\":\""     + timeOnly + "\"," +
-                        "\"daysLeft\":\"" + daysLeft + "\"," +
-                        "\"ts\":"         + ts       +
-                        "}");
-
-            } else {
-                out.print("{\"found\":false}");
             }
 
-            rs.close(); ps.close(); con.close();
-
-        } catch (Exception e) {
-            out.print("{\"found\":false}");
+        } catch (SQLException e) {
+            System.err.println("[DB ERROR] Attendance stream query failed: " + e.getMessage());
             e.printStackTrace();
+            out.print("{\"found\":false,\"error\":\"" + safe(e.getMessage()) + "\"}");
+        } catch (Exception e) {
+            System.err.println("[APP ERROR] Attendance stream error: " + e.getMessage());
+            e.printStackTrace();
+            out.print("{\"found\":false}");
         }
     }
 
