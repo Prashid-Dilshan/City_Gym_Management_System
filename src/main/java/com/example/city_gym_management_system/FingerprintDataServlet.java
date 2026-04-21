@@ -14,10 +14,10 @@ import java.util.*;
 @WebServlet("/fingerprint-data")
 public class FingerprintDataServlet extends HttpServlet {
 
-    private static Map<String, String> userMap        = new HashMap<>();
-    private static Map<String, String> dbUserMap      = new HashMap<>();
-    private static Map<String, String> dbAdmissionMap = new HashMap<>();
-    private static Map<String, String> dbDaysLeftMap  = new HashMap<>();
+    private static final Map<String, String> userMap        = new HashMap<>();
+    private static final Map<String, String> dbUserMap      = new HashMap<>();
+    private static final Map<String, String> dbAdmissionMap = new HashMap<>();
+    private static final Map<String, String> dbDaysLeftMap  = new HashMap<>();
 
     static {
         try {
@@ -39,49 +39,42 @@ public class FingerprintDataServlet extends HttpServlet {
         String page = request.getParameter("page");
 
         try {
-            Class.forName("com.mysql.cj.jdbc.Driver");
+            try (Connection con = DatabaseUtil.getConnection()) {
+                String sql = "SELECT md.fingerprint_id, md.full_name, md.admission_no, ms.end_date " +
+                        "FROM member_details md " +
+                        "LEFT JOIN membership_details ms ON md.id = ms.member_id";
 
-            Connection con = DriverManager.getConnection(
-                    "jdbc:mysql://localhost:3306/gym_system", "root", "1234");
+                try (PreparedStatement ps = con.prepareStatement(sql);
+                     ResultSet rs = ps.executeQuery()) {
+                    dbUserMap.clear();
+                    dbAdmissionMap.clear();
+                    dbDaysLeftMap.clear();
 
-            String sql = "SELECT md.fingerprint_id, md.full_name, md.admission_no, ms.end_date " +
-                    "FROM member_details md " +
-                    "LEFT JOIN membership_details ms ON md.id = ms.member_id";
+                    while (rs.next()) {
+                        String fid     = rs.getString("fingerprint_id");
+                        String name    = rs.getString("full_name");
+                        String admNo   = rs.getString("admission_no");
+                        String endDate = rs.getString("end_date");
 
-            PreparedStatement ps = con.prepareStatement(sql);
-            ResultSet         rs = ps.executeQuery();
+                        savedMembers.add(fid);
+                        dbUserMap.put(fid, name);
+                        dbAdmissionMap.put(fid, admNo != null ? admNo : "-");
 
-            dbUserMap.clear();
-            dbAdmissionMap.clear();
-            dbDaysLeftMap.clear();
-
-            while (rs.next()) {
-                String fid     = rs.getString("fingerprint_id");
-                String name    = rs.getString("full_name");
-                String admNo   = rs.getString("admission_no");
-                String endDate = rs.getString("end_date");
-
-                savedMembers.add(fid);
-                dbUserMap.put(fid, name);
-                dbAdmissionMap.put(fid, admNo != null ? admNo : "-");
-
-                if (endDate != null) {
-                    try {
-                        java.time.LocalDate end   = java.time.LocalDate.parse(endDate);
-                        java.time.LocalDate today = java.time.LocalDate.now();
-                        long days = java.time.temporal.ChronoUnit.DAYS.between(today, end);
-                        dbDaysLeftMap.put(fid, days >= 0 ? days + " days" : "Expired");
-                    } catch (Exception ex) {
-                        dbDaysLeftMap.put(fid, "-");
+                        if (endDate != null) {
+                            try {
+                                java.time.LocalDate end   = java.time.LocalDate.parse(endDate);
+                                java.time.LocalDate today = java.time.LocalDate.now();
+                                long days = java.time.temporal.ChronoUnit.DAYS.between(today, end);
+                                dbDaysLeftMap.put(fid, days >= 0 ? days + " days" : "Expired");
+                            } catch (Exception ex) {
+                                dbDaysLeftMap.put(fid, "-");
+                            }
+                        } else {
+                            dbDaysLeftMap.put(fid, "-");
+                        }
                     }
-                } else {
-                    dbDaysLeftMap.put(fid, "-");
                 }
             }
-
-            rs.close();
-            ps.close();
-            con.close();
 
             // =========================
             // 🔥 CONNECT DEVICE
@@ -165,8 +158,7 @@ public class FingerprintDataServlet extends HttpServlet {
         Connection con = null;
 
         try {
-            con = DriverManager.getConnection(
-                    "jdbc:mysql://localhost:3306/gym_system", "root", "1234");
+            con = DatabaseUtil.getConnection();
 
             zk.invoke("ReadGeneralLogData", new Variant(1));
 
@@ -242,7 +234,7 @@ public class FingerprintDataServlet extends HttpServlet {
     // =========================
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
+            throws IOException {
 
         String action = request.getParameter("action");
 
@@ -268,7 +260,7 @@ public class FingerprintDataServlet extends HttpServlet {
                 }
 
             } catch (Exception e) {
-                e.printStackTrace();
+                System.err.println("[FINGERPRINT ERROR] Delete user failed: " + e.getMessage());
             }
 
             response.sendRedirect("fingerprint-data?page=users");

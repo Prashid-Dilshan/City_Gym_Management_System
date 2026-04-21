@@ -1,11 +1,11 @@
-<%--
-  Created by IntelliJ IDEA.
-  User: User
-  Date: 4/7/2026
-  Time: 12:50 AM
-  To change this template use File | Settings | File Templates.
---%>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%
+    String role = (String) session.getAttribute("userRole");
+    if (!"admin".equals(role)) {
+        response.sendRedirect("login.jsp");
+        return;
+    }
+%>
 
 <html>
 <head>

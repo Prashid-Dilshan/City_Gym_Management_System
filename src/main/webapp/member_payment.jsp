@@ -2,6 +2,12 @@
 <%@ page import="java.util.*" %>
 
 <%
+    String role = (String) session.getAttribute("userRole");
+    if (!"admin".equals(role)) {
+        response.sendRedirect("login.jsp");
+        return;
+    }
+
     if (request.getAttribute("members") == null) {
         response.sendRedirect("member-payment");
         return;
@@ -160,13 +166,23 @@
     monthsInput.addEventListener('change', calculateEndDate);
     startDateInput.addEventListener('change', calculateEndDate);
 
+    let isSubmitting = false;
     document.getElementById('paymentForm').addEventListener('submit', async function (e) {
         e.preventDefault();
+
+        if (isSubmitting) {
+            return;
+        }
 
         if (!memberIdSelect.value) {
             alert('Please select a member first.');
             return;
         }
+
+        isSubmitting = true;
+        const submitButton = this.querySelector('button[type="submit"]');
+        submitButton.disabled = true;
+        submitButton.textContent = 'Saving...';
 
         calculateEndDate();
 
@@ -187,6 +203,9 @@
             window.location.href = '${pageContext.request.contextPath}/member-payment?memberId=' + encodeURIComponent(memberIdSelect.value);
         } else {
             alert(text || 'Failed to save payment.');
+            isSubmitting = false;
+            submitButton.disabled = false;
+            submitButton.textContent = 'Save Payment & Send WhatsApp Receipt';
         }
     });
 

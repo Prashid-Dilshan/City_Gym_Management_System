@@ -2,6 +2,12 @@
 <%@ page import="java.util.*" %>
 
 <%
+    String role = (String) session.getAttribute("userRole");
+    if (!"admin".equals(role)) {
+        response.sendRedirect("login.jsp");
+        return;
+    }
+
     if (request.getAttribute("attendanceLogs") == null) {
         response.sendRedirect("fingerprint-data?page=logs");
         return;
@@ -169,8 +175,9 @@
                 let doc = parser.parseFromString(html, 'text/html');
 
                 let newTable = doc.querySelector("#attendanceTable");
-                if (newTable) {
-                    document.querySelector("#attendanceTable").innerHTML = newTable.innerHTML;
+                let currentTable = document.querySelector("#attendanceTable");
+                if (newTable && currentTable) {
+                    currentTable.innerHTML = newTable.innerHTML;
                 }
             });
     }

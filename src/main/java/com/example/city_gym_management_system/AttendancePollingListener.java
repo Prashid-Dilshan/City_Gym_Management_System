@@ -8,16 +8,12 @@ import jakarta.servlet.ServletContextListener;
 import jakarta.servlet.annotation.WebListener;
 
 import java.sql.*;
-import java.util.*;
 
 @WebListener
 public class AttendancePollingListener implements ServletContextListener {
 
     private Thread pollingThread;
     private volatile boolean running = false;
-
-    private String lastCleanDate = ""; // (unused but untouched as requested)
-    private String lastReminderDate = "";
 
     @Override
     public void contextInitialized(ServletContextEvent sce) {
@@ -64,9 +60,7 @@ public class AttendancePollingListener implements ServletContextListener {
         Connection con = null;
 
         try {
-            Class.forName("com.mysql.cj.jdbc.Driver");
-            con = DriverManager.getConnection(
-                    "jdbc:mysql://localhost:3306/gym_system", "root", "1234");
+            con = DatabaseUtil.getConnection();
 
             zk = new ActiveXComponent("zkemkeeper.ZKEM");
 
@@ -116,7 +110,7 @@ public class AttendancePollingListener implements ServletContextListener {
                 }
 
             } catch (Exception e) {
-                e.printStackTrace();
+                System.err.println("[ATTENDANCE POLL WARNING] Midnight reset failed: " + e.getMessage());
             }
 
 
@@ -145,7 +139,7 @@ public class AttendancePollingListener implements ServletContextListener {
 
                 String fid = userID.toString().trim();
 
-                if (fid == null || fid.isEmpty() || fid.equals("0")) continue;
+                if (fid.isEmpty() || fid.equals("0")) continue;
 
                 String date = String.format("%04d-%02d-%02d",
                         si(yr), si(mo), si(dy));

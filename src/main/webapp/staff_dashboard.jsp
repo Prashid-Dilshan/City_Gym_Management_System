@@ -1,15 +1,8 @@
-<%--
-  Created by IntelliJ IDEA.
-  User: User
-  Date: 3/28/2026
-  Time: 3:31 PM
-  To change this template use File | Settings | File Templates.
---%>
-
 <%
   String role = (String) session.getAttribute("userRole");
-  if (role == null || !role.equals("staff")) {
+  if (!"staff".equals(role)) {
     response.sendRedirect("login.jsp");
+    return;
   }
 %>
 
@@ -20,5 +13,6 @@
 </head>
 <body>
 <h1> staff Dashboard </h1>
+<p><a href="logout">Logout</a></p>
 </body>
 </html>

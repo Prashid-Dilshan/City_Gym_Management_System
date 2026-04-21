@@ -1,4 +1,11 @@
 <%@ page contentType="text/html;charset=UTF-8" %>
+<%
+    String role = (String) session.getAttribute("userRole");
+    if (!"admin".equals(role)) {
+        response.sendRedirect("login.jsp");
+        return;
+    }
+%>
 
 <h2>👤 Member Profile</h2>
 

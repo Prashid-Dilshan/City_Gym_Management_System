@@ -6,7 +6,6 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -28,7 +27,7 @@ public class PaymentRecordServlet extends HttpServlet {
 			List<Map<String, Object>> members = loadMembers(con);
 			List<Map<String, Object>> recentPayments = loadRecentPayments(con);
 
-			int selectedMemberId = parseIntOrDefault(request.getParameter("memberId"), 0);
+			int selectedMemberId = parseIntOrZero(request.getParameter("memberId"));
 			Map<String, Object> selectedMember = findSelectedMember(members, selectedMemberId);
 
 			request.setAttribute("members", members);
@@ -108,11 +107,11 @@ public class PaymentRecordServlet extends HttpServlet {
 		return members.get(0);
 	}
 
-	private int parseIntOrDefault(String value, int fallback) {
+	private int parseIntOrZero(String value) {
 		try {
-			return value == null || value.isBlank() ? fallback : Integer.parseInt(value);
+			return value == null || value.isBlank() ? 0 : Integer.parseInt(value);
 		} catch (Exception e) {
-			return fallback;
+			return 0;
 		}
 	}
 

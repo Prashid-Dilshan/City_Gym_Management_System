@@ -8,7 +8,7 @@ import com.twilio.type.PhoneNumber;
  * WhatsApp Messaging Service using Twilio
  * Handles sending WhatsApp messages for:
  * - Payment receipts
- * - Membership expiry warnings
+ * - Payment reminders (3 days before expiry)
  * - Expired membership notifications
  * - Birthday wishes
  * 
@@ -136,39 +136,34 @@ public class WhatsAppService {
     }
 
     /**
-     * Send membership expiry warning (7 days before expiration)
-     * 
+     * Send payment reminder before membership expires.
+     * This is the only pre-expiry alert so billing stays simple and low-cost.
+     *
      * @param memberName Member's name
      * @param phoneNumber Member's WhatsApp number
-     * @param expiryDate Membership expiry date (e.g., "2026-04-20")
+     * @param dueDate Membership due date (e.g., "2026-04-20")
      * @return true if sent successfully
      */
-    public static boolean sendExpiryWarning(String memberName, String phoneNumber, String expiryDate) {
+    public static boolean sendPaymentReminder(String memberName, String phoneNumber, String dueDate) {
         try {
-            // ✅ Validate inputs
             if (memberName == null || memberName.trim().isEmpty()) {
                 System.err.println("[WHATSAPP ERROR] Member name is null or empty");
                 return false;
             }
 
-            // ✅ Format warning message
             String messageText = String.format(
-                "⏰ *Membership Expiry Alert* ⏰\n\n" +
+                "💳 *Payment Reminder* 💳\n\n" +
                 "Hi %s,\n\n" +
-                "Your gym membership is expiring soon! 📅\n\n" +
-                "📋 *Renewal Details:*\n" +
-                "• Expiry Date: %s\n" +
-                "• Status: Expiring in 7 days ⚠️\n\n" +
-                "👉 Please renew your membership to continue enjoying\n" +
-                "our facilities!\n\n" +
-                "Contact us at City Gym for renewal. 💪",
-                memberName, expiryDate
+                "This is a friendly reminder that your gym membership payment is due on %s.\n\n" +
+                "Please renew on time to avoid interruption of your membership.\n\n" +
+                "Thank you for staying with City Gym! 💪",
+                memberName, dueDate
             );
 
             return sendMessage(phoneNumber, messageText);
 
         } catch (Exception e) {
-            System.err.println("[WHATSAPP ERROR] Failed to send expiry warning: " + e.getMessage());
+            System.err.println("[WHATSAPP ERROR] Failed to send payment reminder: " + e.getMessage());
             return false;
         }
     }

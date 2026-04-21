@@ -1,4 +1,11 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%
+    String role = (String) session.getAttribute("userRole");
+    if (!"admin".equals(role)) {
+        response.sendRedirect("login.jsp");
+        return;
+    }
+%>
 
 <!DOCTYPE html>
 <html>
@@ -96,7 +103,7 @@
     <a href="page2.jsp" target="contentFrame" onclick="setActive(this)">Page 2</a>
 
     <div class="logout">
-        <a href="login.jsp">🚪 Logout</a>
+        <a href="logout">🚪 Logout</a>
     </div>
 </div>
 

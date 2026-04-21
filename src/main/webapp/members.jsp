@@ -1,15 +1,41 @@
 <%@ page import="java.util.*" %>
 <%@ page import="java.sql.*" %>
+<%@ page import="com.example.city_gym_management_system.DatabaseUtil" %>
 <%@ page contentType="text/html; charset=UTF-8" %>
 
 <%
+  String role = (String) session.getAttribute("userRole");
+  if (!"admin".equals(role)) {
+    response.sendRedirect("login.jsp");
+    return;
+  }
+
   if (request.getAttribute("users") == null) {
     response.sendRedirect("fingerprint-data?page=users");
     return;
   }
 
-  List<String> users = (List<String>) request.getAttribute("users");
-  Set<String> savedMembers = (Set<String>) request.getAttribute("savedMembers");
+  List<String> users = new ArrayList<>();
+  Object usersAttr = request.getAttribute("users");
+  if (usersAttr instanceof List<?>) {
+    List<?> rawUsers = (List<?>) usersAttr;
+    for (Object entry : rawUsers) {
+      if (entry != null) {
+        users.add(entry.toString());
+      }
+    }
+  }
+
+  Set<String> savedMembers = new HashSet<>();
+  Object savedMembersAttr = request.getAttribute("savedMembers");
+  if (savedMembersAttr instanceof Set<?>) {
+    Set<?> rawSavedMembers = (Set<?>) savedMembersAttr;
+    for (Object entry : rawSavedMembers) {
+      if (entry != null) {
+        savedMembers.add(entry.toString());
+      }
+    }
+  }
 %>
 
 <h2>🆕 New Fingerprint Users</h2>
@@ -32,7 +58,7 @@
               .replaceAll("[^0-9]", "")
               .trim();
 
-      boolean isSaved = savedMembers != null && savedMembers.contains(userId);
+      boolean isSaved = savedMembers.contains(userId);
 
       if(isSaved) continue;
   %>
@@ -77,23 +103,15 @@
   </tr>
 
   <%
-    try {
-      Class.forName("com.mysql.cj.jdbc.Driver");
-
-      Connection con = DriverManager.getConnection(
-              "jdbc:mysql://localhost:3306/gym_system",
-              "root",
-              "1234"
-      );
+    try (Connection con = DatabaseUtil.getConnection()) {
 
       String sql = "SELECT md.id AS member_id, md.fingerprint_id, md.full_name, md.phone, md.whatsapp, " +
               "ms.months, ms.start_date, ms.end_date " +
               "FROM member_details md " +
               "LEFT JOIN membership_details ms ON md.id = ms.member_id";
 
-      PreparedStatement ps = con.prepareStatement(sql);
-      ResultSet rs = ps.executeQuery();
-
+      try (PreparedStatement ps = con.prepareStatement(sql);
+           ResultSet rs = ps.executeQuery()) {
       while(rs.next()){
   %>
 
@@ -123,13 +141,12 @@
 
   <%
       }
-
-      rs.close();
-      ps.close();
-      con.close();
+      }
 
     } catch(Exception e){
-      out.println("Error: " + e.getMessage());
+  %>
+  <tr><td colspan="8">Error: <%= e.getMessage() %></td></tr>
+  <%
     }
   %>
 

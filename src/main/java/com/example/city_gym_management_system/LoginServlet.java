@@ -9,24 +9,43 @@ import java.io.IOException;
 @WebServlet("/login")
 public class LoginServlet extends HttpServlet {
 
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        response.sendRedirect("login.jsp");
+    }
+
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        String username = request.getParameter("username");
-        String password = request.getParameter("password");
-        String role = request.getParameter("role");
+        String username = trimToEmpty(request.getParameter("username"));
+        String password = trimToEmpty(request.getParameter("password"));
+        String role = trimToEmpty(request.getParameter("role"));
+
+        if (username.isEmpty() || password.isEmpty() || role.isEmpty()) {
+            request.setAttribute("error", "Please enter username, password, and role.");
+            request.getRequestDispatcher("login.jsp").forward(request, response);
+            return;
+        }
+
+        HttpSession oldSession = request.getSession(false);
+        if (oldSession != null) {
+            oldSession.invalidate();
+        }
+        HttpSession session = request.getSession(true);
+        session.setMaxInactiveInterval(30 * 60);
 
         // Admin check
-        if (role.equals("admin") && username.equals("admin") && password.equals("12345")) {
+        if ("admin".equals(role) && "admin".equals(username) && "12345".equals(password)) {
 
-            request.getSession().setAttribute("userRole", "admin");
+            session.setAttribute("userRole", "admin");
             response.sendRedirect("admin_dashboard.jsp");
 
         }
         // Staff check
-        else if (role.equals("staff") && username.equals("s") && password.equals("1")) {
+        else if ("staff".equals(role) && "s".equals(username) && "1".equals(password)) {
 
-            request.getSession().setAttribute("userRole", "staff");
+            session.setAttribute("userRole", "staff");
             response.sendRedirect("staff_dashboard.jsp");
 
         }
@@ -35,5 +54,9 @@ public class LoginServlet extends HttpServlet {
             request.setAttribute("error", "Invalid credentials!");
             request.getRequestDispatcher("login.jsp").forward(request, response);
         }
+    }
+
+    private String trimToEmpty(String value) {
+        return value == null ? "" : value.trim();
     }
 }

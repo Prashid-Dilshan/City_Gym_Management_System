@@ -1,5 +1,14 @@
 <%@ page import="java.sql.*" %>
+<%@ page import="com.example.city_gym_management_system.DatabaseUtil" %>
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+
+<%
+  String role = (String) session.getAttribute("userRole");
+  if (!"admin".equals(role)) {
+    response.sendRedirect("login.jsp");
+    return;
+  }
+%>
 
 <!DOCTYPE html>
 <html>
@@ -39,17 +48,15 @@
     String[] days = new String[7];
     int[] counts = new int[7];
 
-    try {
-      Class.forName("com.mysql.cj.jdbc.Driver");
-      Connection con = DriverManager.getConnection(
-              "jdbc:mysql://localhost:3306/gym_system", "root", "1234");
+    try (Connection con = DatabaseUtil.getConnection()) {
 
       // 🔥 TODAY ATTENDANCE (DEVICE = DB SYNC)
       String q1 = "SELECT COUNT(DISTINCT fingerprint_id) FROM attendance_log WHERE DATE(scan_time)=CURDATE()";
-      PreparedStatement ps1 = con.prepareStatement(q1);
-      ResultSet rs1 = ps1.executeQuery();
-      if(rs1.next()){
-        todayCount = rs1.getInt(1);
+      try (PreparedStatement ps1 = con.prepareStatement(q1);
+           ResultSet rs1 = ps1.executeQuery()) {
+        if(rs1.next()){
+          todayCount = rs1.getInt(1);
+        }
       }
 
       // 🔥 LAST 7 DAYS
@@ -58,20 +65,20 @@
               "WHERE scan_time >= CURDATE() - INTERVAL 7 DAY " +
               "GROUP BY DATE(scan_time)";
 
-      PreparedStatement ps2 = con.prepareStatement(q2);
-      ResultSet rs2 = ps2.executeQuery();
-
-      int i = 0;
-      while(rs2.next()){
-        days[i] = rs2.getString("day");
-        counts[i] = rs2.getInt("total");
-        i++;
+      try (PreparedStatement ps2 = con.prepareStatement(q2);
+           ResultSet rs2 = ps2.executeQuery()) {
+        int i = 0;
+        while(rs2.next() && i < 7){
+          days[i] = rs2.getString("day");
+          counts[i] = rs2.getInt("total");
+          i++;
+        }
       }
 
-      con.close();
-
     } catch(Exception e){
-      out.println(e.getMessage());
+  %>
+  <div class="card">Dashboard load error: <%= e.getMessage() %></div>
+  <%
     }
   %>
 
