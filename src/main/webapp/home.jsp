@@ -12,9 +12,10 @@
 
 <!DOCTYPE html>
 <html>
+
 <head>
   <title>Dashboard</title>
-
+  <meta http-equiv="refresh" content="5">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <style>
