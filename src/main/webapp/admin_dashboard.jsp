@@ -62,16 +62,16 @@
         }
 
         .sidebar-logo {
-            padding: 18px 20px 14px;
+            padding: 6px 0;
             border-bottom: 1px solid var(--border);
             display: flex;
             align-items: center;
             justify-content: center;
+            line-height: 0;
         }
 
-        /* Logo placeholder – swap with your <img> tag */
         .logo-img {
-            width: 170px;
+            width: 160px;
             height: auto;
             object-fit: contain;
         }
@@ -163,9 +163,10 @@
 
         .topbar-title {
             font-family: 'Bebas Neue', sans-serif;
-            font-size: 26px;
+            font-size: 30px;
             letter-spacing: 1.5px;
             flex: 1;
+            margin-left: 440px;
         }
         .topbar-title span { color: var(--red); }
 
@@ -249,7 +250,7 @@
 
     <div class="sidebar-logo">
         <!-- Replace src with your actual logo path -->
-        <img src="img/logo.png" alt="City Gym" class="logo-img"
+        <img src="img/Gym_logo.png" alt="City Gym" class="logo-img"
              onerror="this.style.display='none'; document.getElementById('logoFallback').style.display='block'">
         <div id="logoFallback" class="logo-text" style="display:none;">
             <span>CG</span> FITNESS<br>
@@ -284,24 +285,10 @@
 
 <!-- ── TOP BAR ── -->
 <div class="topbar">
-    <div class="topbar-hamburger"><i class="fa-solid fa-bars"></i></div>
+    <div class="topbar-hamburger"><i class=""></i></div>
 
     <div class="topbar-title">
         <span>Admin</span> Dashboard
-    </div>
-
-    <div class="topbar-search">
-        <i class="fa-solid fa-magnifying-glass"></i>
-        <input type="text" placeholder="Search...">
-    </div>
-
-    <div class="topbar-admin">
-        <div class="avatar"><i class="fa-solid fa-user"></i></div>
-        <div class="admin-info">
-            <div class="name"><%= adminName %></div>
-            <div class="role">Administrator</div>
-        </div>
-        <i class="fa-solid fa-chevron-down chevron"></i>
     </div>
 </div>
 
