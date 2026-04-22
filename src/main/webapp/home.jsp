@@ -102,6 +102,10 @@
       overflow-y: auto;
     }
 
+    ::-webkit-scrollbar { width:6px; height:6px; }
+    ::-webkit-scrollbar-track { background:transparent; }
+    ::-webkit-scrollbar-thumb { background:#2a2a2a; border-radius:4px; }
+
     /* ── TODAY ATTENDANCE BANNER ── */
     .today-banner {
       background: var(--surface);
