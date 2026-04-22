@@ -82,10 +82,12 @@
 
     /* ── CARD ── */
     .card {
+      max-height: 520px;   /* මෙක adjust කරන්න */
+      overflow: hidden;    /* extra part hide වෙනවා */
       position: relative;
       z-index: 10;
       width: 100%;
-      max-width: 490px;
+      max-width: 380px;
       background: var(--card-bg);
       border: 1.5px solid var(--border);
       border-radius: 28px;
@@ -136,7 +138,7 @@
 
     /* ── LOCK ICON ── */
     .lock-wrap {
-      width: 78px; height: 78px;
+      width: 70px; height: 70px;
       margin: 0 auto 26px;
       border-radius: 50%;
       display: flex; align-items: center; justify-content: center;
@@ -178,7 +180,7 @@
     .input-wrap {
       display: flex;
       align-items: center;
-      height: 58px;
+      height: 40px;
       background: var(--input-bg);
       border: 1.5px solid var(--input-bdr);
       border-radius: 14px;
@@ -192,7 +194,7 @@
     }
 
     .input-icon {
-      width: 56px; min-width: 56px;
+      width: 50px; min-width: 56px;
       display: flex; align-items: center; justify-content: center;
       color: var(--red);
       font-size: 17px;
@@ -206,7 +208,7 @@
       background: transparent;
       color: var(--text);
       font-family: 'Outfit', sans-serif;
-      font-size: 18px;
+      font-size: 15px;
       font-weight: 500;
       padding-left: 15px;
     }
@@ -257,13 +259,13 @@
     /* ── LOGIN BUTTON ── */
     .login-btn {
       width: 100%;
-      height: 56px;
+      height: 35px;
       border: none;
       border-radius: 14px;
       background: linear-gradient(135deg, #ff1a1a 0%, #9a0008 100%);
       color: #fff;
       font-family: 'Bebas Neue', sans-serif;
-      font-size: 22px;
+      font-size: 19px;
       letter-spacing: 3px;
       cursor: pointer;
       position: relative;
