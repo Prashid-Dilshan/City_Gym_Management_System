@@ -160,7 +160,7 @@ public class SaveMemberServlet extends HttpServlet {
                 WhatsAppService.sendMessage(
                         whatsapp,
                         String.format(
-                                "Welcome to City Gym, %s! Your membership record has been created successfully. Stay fit and keep going!",
+                                "*Welcome to City Gym*\n\nHello %s,\nYour member profile has been created successfully.\n\nWe are happy to have you with us.",
                                 name)
                 );
             }

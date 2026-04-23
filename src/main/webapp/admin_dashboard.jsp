@@ -266,10 +266,10 @@
             <i class="fa-solid fa-users"></i> Members
         </a>
         <a class="nav-item" href="attendance.jsp" target="contentFrame" onclick="setActive(this)">
-            <i class="fa-solid fa-chart-bar"></i> Members Attendance
+            <i class="fa-solid fa-chart-bar"></i> Attendance
         </a>
         <a class="nav-item" href="member-payment" target="contentFrame" onclick="setActive(this)">
-            <i class="fa-solid fa-credit-card"></i> Membership &amp; Payment
+            <i class="fa-solid fa-credit-card"></i> Payment History
         </a>
         <a class="nav-item" href="help.jsp" target="contentFrame" onclick="setActive(this)">
             <i class="fa-regular fa-circle-question"></i> Help

@@ -10,8 +10,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.time.LocalDate;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -24,46 +22,12 @@ public class PaymentRecordServlet extends HttpServlet {
 	protected void doGet(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException {
 		try (Connection con = DatabaseUtil.getConnection()) {
-			List<Map<String, Object>> members = loadMembers(con);
 			List<Map<String, Object>> recentPayments = loadRecentPayments(con);
-
-			int selectedMemberId = parseIntOrZero(request.getParameter("memberId"));
-			Map<String, Object> selectedMember = findSelectedMember(members, selectedMemberId);
-
-			request.setAttribute("members", members);
-			request.setAttribute("selectedMember", selectedMember);
 			request.setAttribute("recentPayments", recentPayments);
 			request.getRequestDispatcher("member_payment.jsp").forward(request, response);
 		} catch (Exception e) {
 			throw new ServletException("Unable to load member payment page", e);
 		}
-	}
-
-	private List<Map<String, Object>> loadMembers(Connection con) throws SQLException {
-		String sql = "SELECT md.id, md.fingerprint_id, md.full_name, md.whatsapp, " +
-				"ms.months, ms.start_date, ms.end_date, ms.status " +
-				"FROM member_details md " +
-				"LEFT JOIN membership_details ms ON md.id = ms.member_id " +
-				"ORDER BY md.full_name";
-
-		List<Map<String, Object>> members = new ArrayList<>();
-		try (PreparedStatement ps = con.prepareStatement(sql);
-			 ResultSet rs = ps.executeQuery()) {
-			while (rs.next()) {
-				Map<String, Object> row = new LinkedHashMap<>();
-				row.put("id", rs.getInt("id"));
-				row.put("fingerprintId", rs.getString("fingerprint_id"));
-				row.put("fullName", rs.getString("full_name"));
-				row.put("whatsapp", rs.getString("whatsapp"));
-				row.put("months", rs.getObject("months"));
-				row.put("startDate", rs.getString("start_date"));
-				row.put("endDate", rs.getString("end_date"));
-				row.put("status", rs.getString("status"));
-				row.put("daysLeft", calculateDaysLeft(rs.getString("end_date")));
-				members.add(row);
-			}
-		}
-		return members;
 	}
 
 	private List<Map<String, Object>> loadRecentPayments(Connection con) throws SQLException {
@@ -91,43 +55,6 @@ public class PaymentRecordServlet extends HttpServlet {
 		return payments;
 	}
 
-	private Map<String, Object> findSelectedMember(List<Map<String, Object>> members, int memberId) {
-		if (members.isEmpty()) {
-			return null;
-		}
-
-		if (memberId > 0) {
-			for (Map<String, Object> member : members) {
-				if (((Integer) member.get("id")) == memberId) {
-					return member;
-				}
-			}
-		}
-
-		return members.get(0);
-	}
-
-	private int parseIntOrZero(String value) {
-		try {
-			return value == null || value.isBlank() ? 0 : Integer.parseInt(value);
-		} catch (Exception e) {
-			return 0;
-		}
-	}
-
-	private String calculateDaysLeft(String endDate) {
-		if (endDate == null || endDate.isBlank()) {
-			return "-";
-		}
-
-		try {
-			LocalDate end = LocalDate.parse(endDate);
-			long days = ChronoUnit.DAYS.between(LocalDate.now(), end);
-			return days < 0 ? "Expired" : days + " days";
-		} catch (Exception e) {
-			return "-";
-		}
-	}
 }
 
 

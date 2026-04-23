@@ -98,15 +98,31 @@ public class WhatsAppService {
     }
 
     /**
-     * Send payment receipt to member
-     * 
+     * Send payment receipt to member.
+     * Backward-compatible wrapper that omits period dates.
+     */
+    public static boolean sendPaymentReceipt(String memberName, String phoneNumber, double amount, int membershipMonths) {
+        return sendPaymentReceipt(memberName, phoneNumber, amount, membershipMonths, null, null);
+    }
+
+    /**
+     * Send payment receipt to member.
+     *
      * @param memberName Member's name
      * @param phoneNumber Member's WhatsApp number
      * @param amount Amount paid
      * @param membershipMonths Membership duration in months
+     * @param startDate Membership start date (YYYY-MM-DD)
+     * @param endDate Membership end date (YYYY-MM-DD)
      * @return true if sent successfully
      */
-    public static boolean sendPaymentReceipt(String memberName, String phoneNumber, double amount, int membershipMonths) {
+    public static boolean sendPaymentReceipt(
+            String memberName,
+            String phoneNumber,
+            double amount,
+            int membershipMonths,
+            String startDate,
+            String endDate) {
         try {
             // ✅ Validate inputs
             if (memberName == null || memberName.trim().isEmpty()) {
@@ -114,17 +130,21 @@ public class WhatsAppService {
                 return false;
             }
 
+            String safeStartDate = (startDate == null || startDate.trim().isEmpty()) ? "-" : startDate.trim();
+            String safeEndDate = (endDate == null || endDate.trim().isEmpty()) ? "-" : endDate.trim();
+
             // ✅ Format message with member details
             String messageText = String.format(
-                "🎉 *Payment Receipt* 🎉\n\n" +
+                "*City Gym - Payment Receipt*\n\n" +
                 "Hello %s,\n\n" +
-                "Your payment has been received successfully! 💰\n\n" +
-                "📋 *Payment Details:*\n" +
-                "• Amount: Rs. %.2f\n" +
-                "• Membership: %d months\n\n" +
-                "Thank you for being part of City Gym! 💪\n" +
-                "Stay fit, stay healthy! 🏋️",
-                memberName, amount, membershipMonths
+                "We have received your membership payment successfully.\n\n" +
+                "*Payment Details*\n" +
+                "- Amount: Rs. %.2f\n" +
+                "- Package: %d month(s)\n" +
+                "- Start Date: %s\n" +
+                "- End Date: %s\n\n" +
+                "Thank you for training with City Gym.",
+                memberName, amount, membershipMonths, safeStartDate, safeEndDate
             );
 
             return sendMessage(phoneNumber, messageText);
@@ -152,11 +172,12 @@ public class WhatsAppService {
             }
 
             String messageText = String.format(
-                "💳 *Payment Reminder* 💳\n\n" +
+                "*City Gym - Renewal Reminder*\n\n" +
                 "Hi %s,\n\n" +
-                "This is a friendly reminder that your gym membership payment is due on %s.\n\n" +
-                "Please renew on time to avoid interruption of your membership.\n\n" +
-                "Thank you for staying with City Gym! 💪",
+                "Your membership is due for renewal on %s.\n" +
+                "Please complete the payment before this date to keep your access active.\n\n" +
+                "For assistance, contact City Gym Fitness:\n" +
+                "0701234717 - Coach M.F",
                 memberName, dueDate
             );
 
@@ -185,14 +206,13 @@ public class WhatsAppService {
 
             // ✅ Format expired message
             String messageText = String.format(
-                "❌ *Membership Expired* ❌\n\n" +
+                "*City Gym - Membership Expired*\n\n" +
                 "Hi %s,\n\n" +
-                "Your gym membership has expired. 😢\n\n" +
-                "📋 *Next Steps:*\n" +
-                "• Renew your membership to regain access\n" +
-                "• Contact City Gym for special renewal offers\n" +
-                "• We miss you! Come back soon 💪\n\n" +
-                "Tap to renew or call us for details.",
+                "Your membership has expired.\n" +
+                "Please renew your package to continue using gym services.\n\n" +
+                "We look forward to seeing you back at City Gym.\n\n" +
+                "For assistance, contact City Gym Fitness:\n" +
+                "0701234717 - Coach M.F",
                 memberName
             );
 
@@ -221,16 +241,11 @@ public class WhatsAppService {
 
             // ✅ Format birthday message
             String messageText = String.format(
-                "🎂 *Happy Birthday!* 🎂\n\n" +
-                "Dearest %s,\n\n" +
-                "🎉 Wishing you a fantastic birthday!\n\n" +
-                "Thank you for being part of the City Gym family! 💪\n\n" +
-                "💝 *Special Birthday Offer:*\n" +
-                "• Get 10%% off on renewal\n" +
-                "• Free personal training session\n" +
-                "• Birthday month free locker facility\n\n" +
-                "Visit us today to claim your gifts! 🏋️\n" +
-                "Have an amazing day! 🥳",
+                "*Happy Birthday from City Gym*\n\n" +
+                "Dear %s,\n\n" +
+                "Wishing you a healthy and joyful birthday.\n" +
+                "Thank you for being a valued member of City Gym.\n\n" +
+                "Have a great year ahead!",
                 memberName
             );
 
