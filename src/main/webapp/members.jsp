@@ -240,7 +240,7 @@
       border-radius: 20px;
       padding: 32px 30px;
       width: 100%;
-      max-width: 520px;
+      max-width: 620px;
       max-height: 90vh;
       overflow-y: auto;
       position: relative;
@@ -450,7 +450,7 @@
       <tr>
         <th>FP ID</th>
         <th>Name</th>
-        <th>Phone</th>
+        <th>Gender</th>
         <th>WhatsApp</th>
         <th>Package</th>
         <th>Start</th>
@@ -462,7 +462,7 @@
       <%
         boolean hasMembers = false;
         try (Connection con = DatabaseUtil.getConnection()) {
-          String sql = "SELECT md.id AS member_id, md.fingerprint_id, md.full_name, md.phone, md.whatsapp, " +
+          String sql = "SELECT md.id AS member_id, md.fingerprint_id, md.full_name, md.gender, md.whatsapp, " +
                   "ms.months, ms.start_date, ms.end_date " +
                   "FROM member_details md " +
                   "LEFT JOIN membership_details ms ON md.id = ms.member_id";
@@ -474,7 +474,7 @@
       <tr>
         <td><span class="fp-id"><%= rs.getString("fingerprint_id") %></span></td>
         <td><span class="member-name"><%= rs.getString("full_name") %></span></td>
-        <td><%= rs.getString("phone") %></td>
+        <td><%= rs.getString("gender") != null ? rs.getString("gender") : "–" %></td>
         <td><%= rs.getString("whatsapp") != null ? rs.getString("whatsapp") : "–" %></td>
         <td>
           <% if (rs.getObject("months") != null) { %>
@@ -553,12 +553,47 @@
           <input type="text" name="admissionNo" placeholder="ADM-001" required>
         </div>
         <div class="form-group">
-          <label>Phone</label>
-          <input type="text" name="phone" placeholder="07X XXX XXXX">
+          <label>Phone *</label>
+          <div style="display:flex; align-items:center; background: var(--surface2); border:1px solid var(--border); border-radius:10px; overflow:hidden;">
+    <span style="padding:10px 14px; color:#aaa; background:#1a1a1a; border-right:1px solid var(--border); font-weight:600;">
+      +94
+    </span>
+            <input
+                    type="text"
+                    name="phone"
+                    id="phone"
+                    placeholder="77XXXXXXX"
+                    maxlength="9"
+                    required
+                    pattern="[0-9]{9}"
+                    inputmode="numeric"
+                    oninput="onlyNumbers(this)"
+                    style="border:none; background:transparent; flex:1; box-shadow:none;"
+                    title="Enter 9 digit mobile number"
+            >
+          </div>
         </div>
+
         <div class="form-group">
-          <label>WhatsApp</label>
-          <input type="text" name="whatsapp" placeholder="07X XXX XXXX">
+          <label>WhatsApp *</label>
+          <div style="display:flex; align-items:center; background: var(--surface2); border:1px solid var(--border); border-radius:10px; overflow:hidden;">
+    <span style="padding:10px 14px; color:#aaa; background:#1a1a1a; border-right:1px solid var(--border); font-weight:600;">
+      +94
+    </span>
+            <input
+                    type="text"
+                    name="whatsapp"
+                    id="whatsapp"
+                    placeholder="77XXXXXXX"
+                    maxlength="9"
+                    required
+                    pattern="[0-9]{9}"
+                    inputmode="numeric"
+                    oninput="onlyNumbers(this)"
+                    style="border:none; background:transparent; flex:1; box-shadow:none;"
+                    title="Enter 9 digit WhatsApp number"
+            >
+          </div>
         </div>
         <div class="form-group">
           <label>Gender</label>
@@ -671,6 +706,11 @@
               if (newTbody && currTbody) currTbody.innerHTML = newTbody.innerHTML;
             });
   }, 3000);
+
+  function onlyNumbers(input) {
+    input.value = input.value.replace(/[^0-9]/g, '');
+  }
+
 </script>
 
 <script src="attendance-popup.js"></script>

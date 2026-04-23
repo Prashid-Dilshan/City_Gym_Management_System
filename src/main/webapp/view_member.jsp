@@ -419,7 +419,7 @@
             <div class="action-card">
                 <div class="section-label">Actions</div>
                 <button type="button" class="btn btn-red" onclick="showEdit('personal')">
-                    <i class="fa-solid fa-pen"></i> Edit Details
+                    <i class="fa-solid fa-pen"></i> Edit Member Details
                 </button>
                 <button type="button" class="btn btn-success" onclick="showEdit('membership')">
                     <i class="fa-solid fa-credit-card"></i> Update Membership
