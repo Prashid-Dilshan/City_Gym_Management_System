@@ -137,8 +137,7 @@ public class ViewMemberServlet extends HttpServlet {
     // ======================
     // 🔥 UPDATE + DELETE
     // ======================
-    protected void doPost(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) {
 
         String action = request.getParameter("action");
         String fid = request.getParameter("fid");
@@ -196,13 +195,12 @@ public class ViewMemberServlet extends HttpServlet {
                 return;
             }
 
-            // ======================
-            // 🔥 UPDATE
-            // ======================
-            if ("update".equals(action)) {
+                // ======================
+                // 🔥 UPDATE PERSONAL INFO
+                // ======================
+                if ("update".equals(action) || "updatePersonal".equals(action)) {
 
-
-                // 🔥 PHOTO UPDATE PART
+        // 🔥 PHOTO UPDATE PART
                 Part filePart = request.getPart("photo");
                 InputStream photoStream = null;
 
@@ -219,15 +217,8 @@ public class ViewMemberServlet extends HttpServlet {
                 String gender = request.getParameter("gender");
                 int age = Integer.parseInt(request.getParameter("age"));
                 String whatsapp = request.getParameter("whatsapp");
-                String birthdayDate = request.getParameter("birthdayDate");
-                String address = request.getParameter("address");
-
-                int months = Integer.parseInt(request.getParameter("months"));
-                String start = request.getParameter("startDate");
-                String end = request.getParameter("endDate");
-
-                double amount = Double.parseDouble(request.getParameter("amount"));
-                double regFee = Double.parseDouble(request.getParameter("regFee"));
+                        String birthdayDate = request.getParameter("birthdayDate");
+                        String address = request.getParameter("address");
 
                 // 🔥 update member
                 String q1;
@@ -275,22 +266,6 @@ public class ViewMemberServlet extends HttpServlet {
 
                 ps1.executeUpdate();
 
-                // 🔥 update membership
-                String q2 = "UPDATE membership_details ms " +
-                        "JOIN member_details md ON ms.member_id=md.id " +
-                        "SET ms.months=?, ms.start_date=?, ms.end_date=?, ms.amount=?, ms.registration_fee=? " +
-                        "WHERE md.fingerprint_id=?";
-
-                PreparedStatement ps2 = con.prepareStatement(q2);
-
-                ps2.setInt(1, months);
-                ps2.setString(2, start);
-                ps2.setString(3, end);
-                ps2.setDouble(4, amount);
-                ps2.setDouble(5, regFee);
-                ps2.setString(6, fid);
-
-                ps2.executeUpdate();
 
                 response.sendRedirect("view-member?fid=" + fid);
             }

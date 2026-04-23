@@ -489,7 +489,7 @@
         <td><%= rs.getString("end_date")   != null ? rs.getString("end_date")   : "–" %></td>
         <td>
           <div class="btn-actions">
-            <a href="member-payment?memberId=<%= rs.getInt("member_id") %>"
+            <a href="view-member?fid=<%= rs.getString("fingerprint_id") %>&mode=membership"
                target="contentFrame" class="btn btn-ghost">
               <i class="fa-solid fa-credit-card"></i> Payment
             </a>

@@ -299,6 +299,8 @@
 
         /* ── EDIT SECTION ── */
         #editSection { display: none; }
+        #personalEditCard,
+        #membershipEditCard { display: none; }
 
         .edit-grid {
             display: grid;
@@ -416,12 +418,12 @@
             <!-- Action buttons -->
             <div class="action-card">
                 <div class="section-label">Actions</div>
-                <button class="btn btn-red" onclick="showEdit()">
-                    <i class="fa-solid fa-pen"></i> Update Profile
+                <button type="button" class="btn btn-red" onclick="showEdit('personal')">
+                    <i class="fa-solid fa-pen"></i> Edit Details
                 </button>
-                <a href="member-payment?memberId=${memberId}" target="contentFrame" class="btn btn-success">
-                    <i class="fa-solid fa-credit-card"></i> Record Payment
-                </a>
+                <button type="button" class="btn btn-success" onclick="showEdit('membership')">
+                    <i class="fa-solid fa-credit-card"></i> Update Membership
+                </button>
                 <form action="view-member" method="post" style="width:100%;">
                     <input type="hidden" name="action" value="delete">
                     <input type="hidden" name="fid" value="${fid}">
@@ -530,12 +532,12 @@
         </div>
 
         <div class="profile-right">
-            <form action="view-member" method="post" enctype="multipart/form-data">
-                <input type="hidden" name="action" value="update">
-                <input type="hidden" name="fid" value="${fid}">
+            <div id="personalEditCard" class="info-card" style="margin-bottom:16px;">
+                <form action="view-member" method="post" enctype="multipart/form-data">
+                    <input type="hidden" name="action" value="updatePersonal">
+                    <input type="hidden" name="fid" value="${fid}">
 
-                <!-- Personal -->
-                <div class="info-card" style="margin-bottom:16px;">
+                    <!-- Personal -->
                     <div class="card-title">
                         <i class="fa-solid fa-circle-info"></i> Personal Information
                     </div>
@@ -581,17 +583,28 @@
                             <input type="text" name="address" value="${address}">
                         </div>
                     </div>
-                </div>
+                    <div class="edit-actions">
+                        <button type="button" class="btn btn-ghost" onclick="cancelEdit()">
+                            <i class="fa-solid fa-xmark"></i> Cancel
+                        </button>
+                        <button type="submit" class="btn btn-red">
+                            <i class="fa-solid fa-floppy-disk"></i> Save Personal Info
+                        </button>
+                    </div>
+                </form>
+            </div>
 
-                <!-- Membership -->
-                <div class="info-card">
+            <div id="membershipEditCard" class="info-card">
+                <form id="paymentForm" method="post">
+                    <input type="hidden" name="memberId" value="${memberId}">
+
                     <div class="card-title">
-                        <i class="fa-solid fa-id-card"></i> Membership Details
+                        <i class="fa-solid fa-id-card"></i> Membership Details & Payment
                     </div>
                     <div class="edit-grid">
                         <div class="form-group">
                             <label>Package Duration</label>
-                            <select name="months" onchange="calcEdit(this.value)">
+                            <select name="months" id="editMonths" onchange="calcEdit(this.value)">
                                 <% for(int m = 1; m <= 12; m++){ %>
                                 <option value="<%= m %>"
                                         <%= (request.getAttribute("months") != null && ((Integer)request.getAttribute("months") == m)) ? "selected" : "" %>>
@@ -624,21 +637,29 @@
                             <i class="fa-solid fa-xmark"></i> Cancel
                         </button>
                         <button type="submit" class="btn btn-red">
-                            <i class="fa-solid fa-floppy-disk"></i> Save Changes
+                            <i class="fa-solid fa-credit-card"></i> Save Payment & Send Receipt
                         </button>
                     </div>
-                </div>
-
-            </form>
+                </form>
+            </div>
         </div>
     </div>
 </div>
 
 <script>
     // Section toggle
-    function showEdit() {
+    function showEdit(mode) {
         document.getElementById("viewSection").style.display = "none";
         document.getElementById("editSection").style.display = "block";
+        document.getElementById("personalEditCard").style.display = mode === "membership" ? "none" : "block";
+        document.getElementById("membershipEditCard").style.display = mode === "personal" ? "none" : "block";
+
+        if (mode === "membership" && !document.getElementById("editStartDate").value) {
+            document.getElementById("editStartDate").value = new Date().toISOString().split("T")[0];
+        }
+        if (mode === "membership") {
+            calcEdit(document.getElementById("editMonths").value);
+        }
     }
     function cancelEdit() {
         document.getElementById("viewSection").style.display = "block";
@@ -654,9 +675,53 @@
         document.getElementById("editEndDate").value = end.toISOString().split("T")[0];
     }
 
+    // Payment save for membership section
+    let paymentSubmitting = false;
+    document.getElementById("paymentForm").addEventListener("submit", async function (e) {
+        e.preventDefault();
+
+        if (paymentSubmitting) {
+            return;
+        }
+
+        paymentSubmitting = true;
+        const submitButton = this.querySelector('button[type="submit"]');
+        submitButton.disabled = true;
+        submitButton.textContent = 'Saving...';
+
+        calcEdit(document.getElementById("editMonths").value);
+
+        const formData = new FormData(this);
+        const payload = new URLSearchParams(formData);
+        const response = await fetch('${pageContext.request.contextPath}/record-payment', {
+            method: 'POST',
+            body: payload,
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
+            }
+        });
+
+        const text = await response.text();
+        if (response.ok && text.startsWith('OK')) {
+            alert('Payment saved successfully. WhatsApp receipt was triggered if the member has a WhatsApp number.');
+            window.location.href = '${pageContext.request.contextPath}/view-member?fid=${fid}';
+        } else {
+            alert(text || 'Failed to save payment.');
+            paymentSubmitting = false;
+            submitButton.disabled = false;
+            submitButton.textContent = 'Save Payment & Send Receipt';
+        }
+    });
+
     // Days remaining pill
-    window.onload = function () {
+    window.addEventListener('load', function () {
         const endDateStr = "${endDate}";
+        const mode = new URLSearchParams(window.location.search).get("mode");
+
+        if (mode === "personal" || mode === "membership") {
+            showEdit(mode);
+        }
+
         if (!endDateStr) return;
 
         const today   = new Date();
@@ -675,7 +740,7 @@
             el.textContent = days + " days";
             pill.className = "days-pill green";
         }
-    };
+    });
 </script>
 
 <script src="attendance-popup.js"></script>

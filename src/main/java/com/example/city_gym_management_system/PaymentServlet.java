@@ -38,7 +38,14 @@ public class PaymentServlet extends HttpServlet {
 
             boolean whatsappSent = false;
             if (member.whatsapp != null && !member.whatsapp.isBlank()) {
-                whatsappSent = WhatsAppService.sendPaymentReceipt(member.name, member.whatsapp, amount, months);
+                whatsappSent = WhatsAppService.sendPaymentReceipt(
+                        member.name,
+                        member.whatsapp,
+                        amount,
+                        months,
+                        startDate,
+                        endDate
+                );
             }
 
             response.getWriter().write(whatsappSent ? "OK" : "OK: saved but whatsapp not sent");
