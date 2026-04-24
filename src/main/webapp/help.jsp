@@ -68,7 +68,7 @@
         .page-header-text h2 span { color: var(--red); }
         .page-header-text p { font-size: 13px; color: var(--muted); margin-top: 2px; }
 
-        /* ── SYSTEM OVERVIEW BANNER ── */
+        /* ── OVERVIEW BANNER ── */
         .overview-banner {
             background: var(--surface);
             border: 1px solid var(--border);
@@ -88,7 +88,7 @@
         .overview-banner p {
             font-size: 14px;
             color: #aaa;
-            line-height: 1.7;
+            line-height: 1.8;
         }
 
         /* ── FLOW STEPS ── */
@@ -144,7 +144,6 @@
             overflow: hidden;
             animation: fadeUp 0.4s ease both;
         }
-
         .section-header {
             display: flex;
             align-items: center;
@@ -155,12 +154,7 @@
             transition: background 0.2s;
         }
         .section-header:hover { background: rgba(255,255,255,0.02); }
-
-        .section-header-left {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
+        .section-header-left { display: flex; align-items: center; gap: 12px; }
         .section-icon {
             width: 40px; height: 40px;
             border-radius: 11px;
@@ -176,11 +170,7 @@
             letter-spacing: 1.5px;
         }
         .section-title-text p { font-size: 12px; color: var(--muted); margin-top: 1px; }
-
-        .chevron {
-            color: #444; font-size: 14px;
-            transition: transform 0.28s;
-        }
+        .chevron { color: #444; font-size: 14px; transition: transform 0.28s; }
         .section-card.open .chevron { transform: rotate(180deg); }
 
         .section-body {
@@ -191,13 +181,8 @@
         .section-card.open .section-body { display: block; }
 
         /* ── STEPS LIST ── */
-        .steps-list { margin-top: 18px; display: flex; flex-direction: column; gap: 12px; }
-
-        .step-item {
-            display: flex;
-            gap: 14px;
-            align-items: flex-start;
-        }
+        .steps-list { margin-top: 18px; display: flex; flex-direction: column; gap: 14px; }
+        .step-item { display: flex; gap: 14px; align-items: flex-start; }
         .step-num {
             width: 28px; height: 28px;
             border-radius: 50%;
@@ -207,67 +192,20 @@
             font-size: 12px; font-weight: 700;
             display: flex; align-items: center; justify-content: center;
             flex-shrink: 0;
-            margin-top: 1px;
+            margin-top: 2px;
         }
-        .step-content h4 { font-size: 14px; font-weight: 600; color: #e0e0e0; margin-bottom: 4px; }
-        .step-content p  { font-size: 13px; color: #888; line-height: 1.6; }
-
-        /* ── INFO GRID ── */
-        .info-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-            margin-top: 18px;
-        }
-        .info-box {
-            background: var(--surface2);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 14px 16px;
-        }
-        .info-box .ib-label {
-            font-size: 10px; font-weight: 700;
-            text-transform: uppercase; letter-spacing: 0.8px;
-            color: var(--muted); margin-bottom: 6px;
-        }
-        .info-box .ib-value { font-size: 13px; color: #ccc; line-height: 1.6; }
-        .info-box .ib-value strong { color: #fff; }
+        .step-content h4 { font-size: 14px; font-weight: 600; color: #e0e0e0; margin-bottom: 5px; }
+        .step-content p  { font-size: 13px; color: #999; line-height: 1.7; }
 
         /* ── STATUS PILLS ── */
         .pill {
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
+            display: inline-flex; align-items: center; gap: 5px;
             font-size: 11px; font-weight: 700;
-            padding: 3px 10px; border-radius: 20px;
-            letter-spacing: 0.3px;
+            padding: 3px 10px; border-radius: 20px; letter-spacing: 0.3px;
         }
-        .pill-green  { background:rgba(0,200,80,0.10); color:#00c860; border:1px solid rgba(0,200,80,0.22); }
+        .pill-green  { background:rgba(0,200,80,0.10);  color:#00c860; border:1px solid rgba(0,200,80,0.22); }
         .pill-orange { background:rgba(255,160,0,0.10); color:#ffa000; border:1px solid rgba(255,160,0,0.22); }
-        .pill-red    { background:rgba(232,0,13,0.10); color:var(--red); border:1px solid rgba(232,0,13,0.22); }
-
-        /* ── TABLE (DB tables section) ── */
-        .db-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 13px;
-            margin-top: 14px;
-        }
-        .db-table thead tr { background: var(--surface2); }
-        .db-table thead th {
-            padding: 10px 14px;
-            text-align: left;
-            font-size: 10px; font-weight: 700;
-            text-transform: uppercase; letter-spacing: 0.6px;
-            color: var(--muted);
-        }
-        .db-table thead th:first-child { border-radius: 8px 0 0 8px; }
-        .db-table thead th:last-child  { border-radius: 0 8px 8px 0; }
-        .db-table tbody tr { border-bottom: 1px solid var(--border); }
-        .db-table tbody tr:last-child { border-bottom: none; }
-        .db-table tbody td { padding: 10px 14px; color: #bbb; vertical-align: top; }
-        .db-table .col-name { font-weight: 600; color: var(--red); font-family: monospace; font-size: 13px; }
-        .db-table .col-type { color: #5588ff; font-family: monospace; }
+        .pill-red    { background:rgba(232,0,13,0.10);  color:var(--red); border:1px solid rgba(232,0,13,0.22); }
 
         /* ── TIP BOX ── */
         .tip-box {
@@ -276,10 +214,10 @@
             border-left: 3px solid var(--red);
             border-radius: 10px;
             padding: 12px 16px;
-            margin-top: 14px;
+            margin-top: 16px;
             font-size: 13px;
             color: #aaa;
-            line-height: 1.6;
+            line-height: 1.7;
         }
         .tip-box strong { color: var(--red); }
 
@@ -288,7 +226,6 @@
             from { opacity:0; transform:translateY(14px); }
             to   { opacity:1; transform:translateY(0); }
         }
-
         .section-card:nth-child(1) { animation-delay: 0.10s; }
         .section-card:nth-child(2) { animation-delay: 0.14s; }
         .section-card:nth-child(3) { animation-delay: 0.18s; }
@@ -298,7 +235,6 @@
 
         @media (max-width: 900px) {
             .flow-grid { grid-template-columns: repeat(3,1fr); }
-            .info-grid { grid-template-columns: 1fr; }
         }
         @media (max-width: 560px) {
             body { padding: 14px 14px 32px; }
@@ -313,7 +249,7 @@
     <div class="page-header-icon"><i class="fa-regular fa-circle-question"></i></div>
     <div class="page-header-text">
         <h2>Help &amp; <span>Guide</span></h2>
-        <p>City Gym Hambantota – Admin System Documentation</p>
+        <p>City Gym Hambantota – How to use the Admin Dashboard</p>
     </div>
 </div>
 
@@ -321,108 +257,108 @@
 <div class="overview-banner">
     <h3><i class="fa-solid fa-circle-info" style="margin-right:8px;"></i>System Overview</h3>
     <p>
-        City Gym Hambantota Management System is a <strong style="color:#ddd;">fingerprint-based gym management platform</strong>.
-        Members register their fingerprint on a physical device. When they scan at the gym, the system records their attendance in real-time,
-        tracks membership status, and notifies the admin via a live popup. The admin can manage members, record payments, and view attendance reports — all from this dashboard.
+        This dashboard lets you manage everything at <strong style="color:#ddd;">City Gym Hambantota</strong> from one place.
+        Members scan their fingerprint at the entrance — the system automatically records their attendance and shows you a live popup.
+        From here you can <strong style="color:#ddd;">add members, record payments, check attendance,</strong> and <strong style="color:#ddd;">view membership status</strong> at any time.
     </p>
 </div>
 
-<!-- HOW IT WORKS – FLOW -->
+<!-- HOW IT WORKS FLOW -->
 <div class="flow-grid">
     <div class="flow-step">
         <div class="flow-num">1</div>
         <div class="flow-icon"><i class="fa-solid fa-fingerprint"></i></div>
-        <div class="flow-label">Fingerprint Registered</div>
-        <div class="flow-sub">Member scans on device</div>
+        <div class="flow-label">Member Scans Finger</div>
+        <div class="flow-sub">At the entrance device</div>
     </div>
     <div class="flow-step">
         <div class="flow-num">2</div>
         <div class="flow-icon"><i class="fa-solid fa-user-plus"></i></div>
-        <div class="flow-label">Added to System</div>
-        <div class="flow-sub">Admin adds member details</div>
+        <div class="flow-label">You Add the Member</div>
+        <div class="flow-sub">Fill in their details</div>
     </div>
     <div class="flow-step">
         <div class="flow-num">3</div>
         <div class="flow-icon"><i class="fa-solid fa-credit-card"></i></div>
-        <div class="flow-label">Payment Recorded</div>
-        <div class="flow-sub">Membership package set</div>
+        <div class="flow-label">Record Payment</div>
+        <div class="flow-sub">Set membership package</div>
     </div>
     <div class="flow-step">
         <div class="flow-num">4</div>
         <div class="flow-icon"><i class="fa-solid fa-hand-pointer"></i></div>
-        <div class="flow-label">Daily Scan</div>
-        <div class="flow-sub">Member scans at entrance</div>
+        <div class="flow-label">Daily Attendance</div>
+        <div class="flow-sub">Auto-logged on each scan</div>
     </div>
     <div class="flow-step">
         <div class="flow-num">5</div>
         <div class="flow-icon"><i class="fa-solid fa-bell"></i></div>
-        <div class="flow-label">Live Notification</div>
-        <div class="flow-sub">Admin sees popup instantly</div>
+        <div class="flow-label">Live Popup</div>
+        <div class="flow-sub">You're notified instantly</div>
     </div>
 </div>
 
-<!-- ═══════════════════ SECTIONS ═══════════════════ -->
-
-<!-- 1. HOME DASHBOARD -->
+<!-- ═══ 1. HOME ═══ -->
 <div class="section-card open">
     <div class="section-header" onclick="toggle(this)">
         <div class="section-header-left">
             <div class="section-icon"><i class="fa-solid fa-house"></i></div>
             <div class="section-title-text">
-                <h3>Home Dashboard</h3>
-                <p>Stats overview, attendance chart, membership status</p>
+                <h3>Home</h3>
+                <p>Quick overview of the gym — attendance, members, memberships</p>
             </div>
         </div>
         <i class="fa-solid fa-chevron-down chevron"></i>
     </div>
     <div class="section-body">
-        <div class="info-grid">
-            <div class="info-box">
-                <div class="ib-label">Row 1 – 3 Stat Cards</div>
-                <div class="ib-value">
-                    <strong>Total Members</strong> — member_details table<br>
-                    <strong>Today Attendance</strong> — distinct fingerprint scans today<br>
-                    <strong>Weekly Avg Attendance</strong> — avg per day (last 7 days)
+        <div class="steps-list">
+            <div class="step-item">
+                <div class="step-num"><i class="fa-solid fa-users" style="font-size:10px;"></i></div>
+                <div class="step-content">
+                    <h4>Total Members</h4>
+                    <p>Shows the total number of members currently registered in the system.</p>
                 </div>
             </div>
-            <div class="info-box">
-                <div class="ib-label">Row 2 – 2 Stat Cards</div>
-                <div class="ib-value">
-                    <strong>Active Memberships</strong> — end_date &ge; today<br>
-                    <strong>Ended Memberships</strong> — end_date &lt; today (expired)
+            <div class="step-item">
+                <div class="step-num"><i class="fa-solid fa-fingerprint" style="font-size:10px;"></i></div>
+                <div class="step-content">
+                    <h4>Today's Attendance</h4>
+                    <p>How many members have scanned their fingerprint today. This updates automatically — no need to refresh the page.</p>
                 </div>
             </div>
-            <div class="info-box">
-                <div class="ib-label">Row 3 – Attendance Chart</div>
-                <div class="ib-value">
-                    Bar chart showing daily attendance.<br>
-                    Toggle between <strong>Last 7 Days</strong> and <strong>Last 30 Days</strong>.<br>
-                    Page auto-refreshes every <strong>30 seconds</strong>.
+            <div class="step-item">
+                <div class="step-num"><i class="fa-solid fa-chart-bar" style="font-size:10px;"></i></div>
+                <div class="step-content">
+                    <h4>Weekly Average</h4>
+                    <p>The average number of members attending per day over the past 7 days.</p>
                 </div>
             </div>
-            <div class="info-box">
-                <div class="ib-label">DB Tables Used</div>
-                <div class="ib-value">
-                    <code style="color:#e8000d;">attendance_log</code> — scan records<br>
-                    <code style="color:#e8000d;">member_details</code> — member info<br>
-                    <code style="color:#e8000d;">membership_details</code> — package dates
+            <div class="step-item">
+                <div class="step-num"><i class="fa-solid fa-id-card" style="font-size:10px;"></i></div>
+                <div class="step-content">
+                    <h4>Active &amp; Ended Memberships</h4>
+                    <p><strong style="color:#00c860;">Active</strong> — members whose membership is still valid today.<br>
+                        <strong style="color:var(--red);">Ended</strong> — members whose membership has expired and needs renewal.</p>
                 </div>
             </div>
-        </div>
-        <div class="tip-box">
-            <strong>Tip:</strong> The watermark logo (img/logo.png) appears faintly on each stat card and inside the chart for branding. Make sure the logo file exists at that path.
+            <div class="step-item">
+                <div class="step-num"><i class="fa-solid fa-calendar" style="font-size:10px;"></i></div>
+                <div class="step-content">
+                    <h4>Attendance Chart</h4>
+                    <p>A bar chart showing how many members attended each day. Use the buttons above the chart to switch between <strong>Last 7 Days</strong> and <strong>Last 30 Days</strong>. The page refreshes itself automatically every 30 seconds.</p>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
-<!-- 2. MEMBERS -->
+<!-- ═══ 2. MEMBERS ═══ -->
 <div class="section-card">
     <div class="section-header" onclick="toggle(this)">
         <div class="section-header-left">
             <div class="section-icon"><i class="fa-solid fa-users"></i></div>
             <div class="section-title-text">
                 <h3>Members</h3>
-                <p>Add new fingerprint users, view &amp; manage all saved members</p>
+                <p>Register new members and manage existing ones</p>
             </div>
         </div>
         <i class="fa-solid fa-chevron-down chevron"></i>
@@ -433,91 +369,104 @@
                 <div class="step-num">1</div>
                 <div class="step-content">
                     <h4>New Fingerprint Users (Top Table)</h4>
-                    <p>When a member scans their finger on the device for the first time, they appear here. The table auto-refreshes every <strong>3 seconds</strong> via fetch(). Click <strong>Add Member</strong> to open the registration popup.</p>
+                    <p>When someone scans their finger at the entrance for the first time, they appear here automatically. This table updates every few seconds — you don't need to refresh the page.</p>
                 </div>
             </div>
             <div class="step-item">
                 <div class="step-num">2</div>
                 <div class="step-content">
-                    <h4>Add Member Popup</h4>
-                    <p>Fill in personal details (Name, Admission No, Phone, WhatsApp, Gender, Age, Birthday, Address, Photo) and membership package (Duration, Start Date — End Date auto-calculates, Amount, Registration Fee). Click <strong>Save Member</strong> to store in DB.</p>
+                    <h4>Adding a New Member</h4>
+                    <p>Click <strong>Add Member</strong> next to a new fingerprint user. A form will open — fill in:</p>
+                    <p style="margin-top:8px;">
+                        • <strong>Personal details:</strong> Name, Admission No, Phone, WhatsApp, Gender, Age, Birthday, Address, Photo<br>
+                        • <strong>Membership:</strong> Duration (Date and months) and Start Date — the End Date fills in automatically<br>
+                        • <strong>Fees:</strong> Monthly amount and Registration Fee
+                    </p>
+                    <p style="margin-top:8px;">Click <strong>Save Member</strong> when done.</p>
                 </div>
             </div>
             <div class="step-item">
                 <div class="step-num">3</div>
                 <div class="step-content">
                     <h4>Saved Members (Bottom Table)</h4>
-                    <p>All registered members shown here. Each row has a <strong>Payment</strong> button (goes to payment page) and a <strong>View</strong> button (opens full member profile).</p>
+                    <p>All registered members are listed here. Each row has two buttons:<br>
+                        • <strong>Payment</strong> — Go to the payment page for that member<br>
+                        • <strong>View</strong> — Open the full member profile</p>
                 </div>
             </div>
             <div class="step-item">
                 <div class="step-num">4</div>
                 <div class="step-content">
-                    <h4>Delete from Device</h4>
-                    <p>The 🗑 trash button deletes the fingerprint record from the physical device (calls <code>fingerprint-data</code> servlet with <code>action=deleteDeviceUser</code>). This does NOT delete from the member_details table.</p>
+                    <h4>Removing from Device</h4>
+                    <p>The 🗑 trash icon in the top table removes that fingerprint from the entrance device only. It does not delete a saved member from the system.</p>
                 </div>
             </div>
         </div>
         <div class="tip-box">
-            <strong>Note:</strong> A member who is already saved won't appear in the "New Fingerprint Users" table — the system filters them out by comparing fingerprint IDs in savedMembers set.
+            <strong>Note:</strong> Members who are already saved won't show up in the New Fingerprint Users table. Only unsaved fingerprints appear there.
         </div>
     </div>
 </div>
 
-<!-- 3. VIEW MEMBER -->
+<!-- ═══ 3. MEMBER PROFILE ═══ -->
 <div class="section-card">
     <div class="section-header" onclick="toggle(this)">
         <div class="section-header-left">
             <div class="section-icon"><i class="fa-solid fa-user"></i></div>
             <div class="section-title-text">
-                <h3>Member Profile (View Member)</h3>
-                <p>Full profile, membership status, edit &amp; delete</p>
+                <h3>Member Profile</h3>
+                <p>View full details, edit info, record payment or delete a member</p>
             </div>
         </div>
         <i class="fa-solid fa-chevron-down chevron"></i>
     </div>
     <div class="section-body">
-        <div class="info-grid">
-            <div class="info-box">
-                <div class="ib-label">Days Remaining Indicator</div>
-                <div class="ib-value">
-                    <span class="pill pill-green"><i class="fa-solid fa-circle-check"></i> Active</span> — more than 7 days left<br><br>
-                    <span class="pill pill-orange"><i class="fa-solid fa-triangle-exclamation"></i> Warning</span> — 7 days or less<br><br>
-                    <span class="pill pill-red"><i class="fa-solid fa-circle-xmark"></i> Expired</span> — membership ended
-                </div>
-            </div>
-            <div class="info-box">
-                <div class="ib-label">Actions Available</div>
-                <div class="ib-value">
-                    <strong>Update Profile</strong> — Edit all fields + photo<br>
-                    <strong>Record Payment</strong> — Go to payment page<br>
-                    <strong>Delete Member</strong> — Permanently removes from DB
-                </div>
-            </div>
-        </div>
-        <div class="steps-list" style="margin-top:16px;">
+        <div class="steps-list">
             <div class="step-item">
-                <div class="step-num">!</div>
+                <div class="step-num">1</div>
                 <div class="step-content">
-                    <h4>Edit Mode</h4>
-                    <p>Click <strong>Update Profile</strong> to switch to edit view. All fields become editable. End date auto-calculates when you change the month dropdown or start date. Click <strong>Save Changes</strong> to submit (<code>action=update</code> to view-member servlet).</p>
+                    <h4>Membership Status</h4>
+                    <p>The member's current status is shown at the top of the profile:</p>
+                    <p style="margin-top:8px;">
+                        <span class="pill pill-green"><i class="fa-solid fa-circle-check"></i> Active</span> — Valid membership, more than 7 days left<br><br>
+                        <span class="pill pill-orange"><i class="fa-solid fa-triangle-exclamation"></i> Expiring Soon</span> — 7 days or fewer remaining<br><br>
+                        <span class="pill pill-red"><i class="fa-solid fa-circle-xmark"></i> Expired</span> — Membership has ended, renewal needed
+                    </p>
                 </div>
             </div>
-        </div>
-        <div class="tip-box">
-            <strong>Photo:</strong> Member photo is served via <code>view-member?fid=XXX&type=image</code>. The servlet reads from the database BLOB and streams it as an image. If no photo, a fallback icon is shown.
+            <div class="step-item">
+                <div class="step-num">2</div>
+                <div class="step-content">
+                    <h4>Editing a Member</h4>
+                    <p>Click <strong>Update Profile</strong> to switch to edit mode. All fields become editable — you can change name, contact details, photo, and membership dates. The end date recalculates automatically when you change the duration or start date. Click <strong>Save Changes</strong> when done.</p>
+                </div>
+            </div>
+            <div class="step-item">
+                <div class="step-num">3</div>
+                <div class="step-content">
+                    <h4>Record Payment</h4>
+                    <p>Click <strong>Record Payment</strong> to go directly to the payment page for this member.</p>
+                </div>
+            </div>
+            <div class="step-item">
+                <div class="step-num">4</div>
+                <div class="step-content">
+                    <h4>Deleting a Member</h4>
+                    <p>Click <strong>Delete Member</strong> to permanently remove this member from the system. This cannot be undone — double-check before confirming.</p>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
-<!-- 4. ATTENDANCE LOGS -->
+<!-- ═══ 4. ATTENDANCE ═══ -->
 <div class="section-card">
     <div class="section-header" onclick="toggle(this)">
         <div class="section-header-left">
             <div class="section-icon"><i class="fa-solid fa-chart-bar"></i></div>
             <div class="section-title-text">
-                <h3>Members Attendance</h3>
-                <p>Live fingerprint scan log with membership status</p>
+                <h3>Attendance</h3>
+                <p>Live log of every member scan at the entrance</p>
             </div>
         </div>
         <i class="fa-solid fa-chevron-down chevron"></i>
@@ -527,50 +476,41 @@
             <div class="step-item">
                 <div class="step-num">1</div>
                 <div class="step-content">
-                    <h4>How Attendance is Recorded</h4>
-                    <p>When a member scans their finger at the entrance, the fingerprint device communicates with the server. The <strong>attendance-stream</strong> servlet receives the scan and inserts a record into the <code>attendance_log</code> table with the fingerprint_id and scan_time.</p>
+                    <h4>What This Page Shows</h4>
+                    <p>Every time a member scans their finger at the entrance, a new row is added here automatically. The table updates on its own every few seconds — you'll see a <strong>LIVE</strong> badge at the top confirming this is active.</p>
                 </div>
             </div>
             <div class="step-item">
                 <div class="step-num">2</div>
                 <div class="step-content">
-                    <h4>Auto-Refresh</h4>
-                    <p>The attendance table auto-refreshes every <strong>5 seconds</strong> via fetch() — only the table body refreshes, not the full page. The "LIVE" badge with blinking dot shows this is active.</p>
+                    <h4>What Each Row Shows</h4>
+                    <p>Each row shows the member's <strong>name</strong>, <strong>admission number</strong>, the <strong>exact scan time</strong>, and their membership status:</p>
+                    <p style="margin-top:8px;">
+                        <span class="pill pill-green">Active</span> — Membership valid &nbsp;
+                        <span class="pill pill-orange">Expiring Soon</span> — 7 days or fewer &nbsp;
+                        <span class="pill pill-red">Expired</span> — Membership ended
+                    </p>
                 </div>
             </div>
             <div class="step-item">
                 <div class="step-num">3</div>
                 <div class="step-content">
-                    <h4>Membership Remaining Column</h4>
-                    <p>
-                        <span class="pill pill-green">Active</span> — more than 7 days &nbsp;
-                        <span class="pill pill-orange">Expiring Soon</span> — ≤7 days &nbsp;
-                        <span class="pill pill-red">Expired</span> — past end date
-                    </p>
+                    <h4>Unregistered Fingerprints</h4>
+                    <p>If someone scans at the entrance but hasn't been added to the system yet, they won't appear here. Go to the <strong>Members</strong> page to register them first.</p>
                 </div>
             </div>
-            <div class="step-item">
-                <div class="step-num">4</div>
-                <div class="step-content">
-                    <h4>Unknown / Deleted Members</h4>
-                    <p>If a fingerprint scan comes in but the member was deleted from the DB (or never added), the row is silently skipped. Only members with valid names and admission numbers are shown.</p>
-                </div>
-            </div>
-        </div>
-        <div class="tip-box">
-            <strong>Note:</strong> Attendance data comes from the <code>fingerprint-data</code> servlet with <code>page=logs</code>. The servlet joins <code>attendance_log</code> with <code>member_details</code> and <code>membership_details</code> to build each row.
         </div>
     </div>
 </div>
 
-<!-- 5. MEMBERSHIP & PAYMENT -->
+<!-- ═══ 5. PAYMENT ═══ -->
 <div class="section-card">
     <div class="section-header" onclick="toggle(this)">
         <div class="section-header-left">
             <div class="section-icon"><i class="fa-solid fa-credit-card"></i></div>
             <div class="section-title-text">
-                <h3>Membership &amp; Payment</h3>
-                <p>Record payments, renew membership, WhatsApp receipt</p>
+                <h3>Payment History</h3>
+                <p>Record payments and view all past payment records</p>
             </div>
         </div>
         <i class="fa-solid fa-chevron-down chevron"></i>
@@ -580,89 +520,86 @@
             <div class="step-item">
                 <div class="step-num">1</div>
                 <div class="step-content">
-                    <h4>Select a Member</h4>
-                    <p>Choose a member from the dropdown. The <strong>Selected Member Summary</strong> card on the right instantly shows their current membership status, package, end date, and WhatsApp number.</p>
+                    <h4>Viewing Payment History</h4>
+                    <p>This page shows all past payments across all members — including the member's name, WhatsApp number, amount paid, package duration, and payment date.</p>
                 </div>
             </div>
             <div class="step-item">
                 <div class="step-num">2</div>
                 <div class="step-content">
-                    <h4>Fill Payment Details</h4>
-                    <p>Enter Amount (Rs.), number of Months, and Start Date. The <strong>End Date auto-calculates</strong> based on start date + months. The end date field is read-only.</p>
+                    <h4>Recording a New Payment</h4>
+                    <p>Go to the <strong>Members</strong> page and click the <strong>Payment</strong> button next to a member — or click <strong>Record Payment</strong> inside their profile. Then fill in:</p>
+                    <p style="margin-top:8px;">
+                        • <strong>Amount</strong> (Rs.)<br>
+                        • <strong>Number of Months</strong><br>
+                        • <strong>Start Date</strong> — the End Date fills in automatically
+                    </p>
+                    <p style="margin-top:8px;">Click <strong>Save Payment</strong> to confirm. The member's membership dates will update immediately.</p>
                 </div>
             </div>
             <div class="step-item">
                 <div class="step-num">3</div>
                 <div class="step-content">
-                    <h4>Save &amp; WhatsApp Receipt</h4>
-                    <p>Click <strong>Save Payment &amp; Send WhatsApp Receipt</strong>. The form submits to <code>record-payment</code> servlet via fetch(). If the member has a WhatsApp number, the receipt is automatically triggered. On success, the page reloads with the member's updated info.</p>
+                    <h4>WhatsApp Receipt</h4>
+                    <p>If the member has a WhatsApp number saved, a payment receipt is automatically sent to them the moment you save the payment. No extra steps needed.</p>
                 </div>
             </div>
-            <div class="step-item">
-                <div class="step-num">4</div>
-                <div class="step-content">
-                    <h4>Recent Payment History</h4>
-                    <p>The bottom table shows all past payment records with member name, WhatsApp, amount, package duration, payment date, and status.</p>
-                </div>
-            </div>
-        </div>
-        <div class="tip-box">
-            <strong>DB:</strong> Payments are stored in a payments table linked to member_details. The WhatsApp message is sent via an external API call triggered from the <code>record-payment</code> servlet.
         </div>
     </div>
 </div>
 
-<!-- 6. LIVE ATTENDANCE POPUP -->
+<!-- ═══ 6. LIVE POPUP ═══ -->
 <div class="section-card">
     <div class="section-header" onclick="toggle(this)">
         <div class="section-header-left">
             <div class="section-icon"><i class="fa-solid fa-bell"></i></div>
             <div class="section-title-text">
                 <h3>Live Attendance Popup</h3>
-                <p>Real-time notification when a member scans (attendance-popup.js)</p>
+                <p>Instant notification whenever a member scans at the entrance</p>
             </div>
         </div>
         <i class="fa-solid fa-chevron-down chevron"></i>
     </div>
     <div class="section-body">
-        <div class="info-grid">
-            <div class="info-box">
-                <div class="ib-label">How It Works</div>
-                <div class="ib-value">
-                    The JS file polls <code>/attendance-stream?lastSeen=TIMESTAMP</code> every <strong>5 seconds</strong>. If a new scan is found (found: true), the popup appears bottom-right. The lastSeen timestamp is stored in <strong>sessionStorage</strong> so navigating between pages doesn't reset it.
+        <div class="steps-list">
+            <div class="step-item">
+                <div class="step-num">1</div>
+                <div class="step-content">
+                    <h4>What It Does</h4>
+                    <p>Whenever a member scans their finger at the entrance, a popup appears automatically at the <strong>bottom-right corner</strong> of your screen — on any page you're on. You don't need to be on the Attendance page to see it.</p>
                 </div>
             </div>
-            <div class="info-box">
-                <div class="ib-label">Popup Shows</div>
-                <div class="ib-value">
-                    • Member name &amp; avatar<br>
-                    • Admission No<br>
-                    • Scan time<br>
-                    • Membership remaining<br>
-                    • Status badge (ACTIVE / EXPIRING SOON / MEMBERSHIP EXPIRED)
+            <div class="step-item">
+                <div class="step-num">2</div>
+                <div class="step-content">
+                    <h4>What the Popup Shows</h4>
+                    <p>
+                        • Member's <strong>name</strong><br>
+                        • <strong>Admission number</strong><br>
+                        • Exact <strong>scan time</strong><br>
+                        • <strong>Days remaining</strong> on their membership<br>
+                        • A colour-coded status badge:
+                    </p>
+                    <p style="margin-top:8px;">
+                        <span class="pill pill-green">ACTIVE</span> — More than 7 days left &nbsp;
+                        <span class="pill pill-orange">EXPIRING SOON</span> — 7 days or fewer &nbsp;
+                        <span class="pill pill-red">MEMBERSHIP EXPIRED</span>
+                    </p>
                 </div>
             </div>
-            <div class="info-box">
-                <div class="ib-label">Color Coding</div>
-                <div class="ib-value">
-                    <span class="pill pill-green">ACTIVE</span> &gt; 7 days remaining<br><br>
-                    <span class="pill pill-orange">EXPIRING SOON</span> ≤ 7 days<br><br>
-                    <span class="pill pill-red">MEMBERSHIP EXPIRED</span>
-                </div>
-            </div>
-            <div class="info-box">
-                <div class="ib-label">Auto-Close</div>
-                <div class="ib-value">
-                    Popup closes automatically after <strong>2.5 minutes</strong> with a slide-out animation. The red progress bar at the bottom shrinks as the timer counts down. Users can also click ✕ to close manually.
+            <div class="step-item">
+                <div class="step-num">3</div>
+                <div class="step-content">
+                    <h4>Closing the Popup</h4>
+                    <p>The popup closes on its own after <strong>2.5 minutes</strong>. The red bar at the bottom shrinks as the timer counts down. You can also close it immediately by clicking the <strong>✕</strong> button in the top-right corner of the popup.</p>
                 </div>
             </div>
         </div>
         <div class="tip-box">
-            <strong>Important:</strong> <code>attendance-popup.js</code> is included in EVERY page via <code>&lt;script src="attendance-popup.js"&gt;</code>. This means the live popup works on ALL pages of the dashboard simultaneously — not just the attendance page.
+            <strong>Tip:</strong> The popup works on every page — Home, Members, Attendance, Payments, and even this Help page. You'll never miss a scan.
         </div>
     </div>
 </div>
-
 
 <script>
     function toggle(header) {
@@ -672,5 +609,6 @@
 </script>
 
 <script src="attendance-popup.js"></script>
+<%@ include file="footer.jsp" %>
 </body>
 </html>

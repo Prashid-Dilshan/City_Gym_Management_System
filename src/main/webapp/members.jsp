@@ -714,5 +714,6 @@
 </script>
 
 <script src="attendance-popup.js"></script>
+<%@ include file="footer.jsp" %>
 </body>
 </html>
