@@ -632,6 +632,7 @@
         <div class="form-group">
           <label>Package Duration</label>
           <select name="months" onchange="calc(this.value)">
+            <option value="day">1 Day</option>
             <% for (int m = 1; m <= 12; m++) { %>
             <option value="<%= m %>"><%= m %> Month<%= m > 1 ? "s" : "" %></option>
             <% } %>
@@ -652,7 +653,7 @@
         </div>
         <div class="form-group">
           <label>Registration Fee (Rs)</label>
-          <input type="number" name="regFee" placeholder="0.00" required>
+          <input type="number" name="regFee" placeholder="0.00">
         </div>
       </div>
 
@@ -674,7 +675,7 @@
     document.getElementById("userId").value = id;
     const today = new Date().toISOString().split("T")[0];
     document.getElementById("startDate").value = today;
-    calc(1);
+    calc("day");
   }
 
   function closePopup() {
@@ -686,11 +687,18 @@
     if (e.target === this) closePopup();
   });
 
-  function calc(months) {
+  function calc(duration) {
     const start = new Date(document.getElementById("startDate").value);
     if (isNaN(start)) return;
+
     const end = new Date(start);
-    end.setMonth(end.getMonth() + parseInt(months));
+
+    if (duration === "day") {
+      end.setDate(end.getDate() + 1);
+    } else {
+      end.setMonth(end.getMonth() + parseInt(duration));
+    }
+
     document.getElementById("endDate").value = end.toISOString().split("T")[0];
   }
 

@@ -489,8 +489,9 @@
                     <div class="info-item">
                         <span class="info-label">Package</span>
                         <span class="info-value">
-              <span class="pkg-badge">${months} Months</span>
-            </span>
+                            <% Integer monthsVal = (Integer) request.getAttribute("months"); %>
+                            <span class="pkg-badge"><%= (monthsVal != null && monthsVal == 0) ? "1 Day" : (monthsVal + " Months") %></span>
+                        </span>
                     </div>
                     <div class="info-item">
                         <span class="info-label">Start Date</span>
@@ -605,6 +606,10 @@
                         <div class="form-group">
                             <label>Package Duration</label>
                             <select name="months" id="editMonths" onchange="calcEdit(this.value)">
+                                <option value="day"
+                                        <%= (request.getAttribute("months") != null && ((Integer)request.getAttribute("months") == 0)) ? "selected" : "" %>>
+                                    1 Day
+                                </option>
                                 <% for(int m = 1; m <= 12; m++){ %>
                                 <option value="<%= m %>"
                                         <%= (request.getAttribute("months") != null && ((Integer)request.getAttribute("months") == m)) ? "selected" : "" %>>
@@ -667,11 +672,15 @@
     }
 
     // End date auto-calc (edit form)
-    function calcEdit(months) {
+    function calcEdit(duration) {
         const start = new Date(document.getElementById("editStartDate").value);
-        if (isNaN(start)) return;
+        if (isNaN(start.getTime())) return;
         const end = new Date(start);
-        end.setMonth(end.getMonth() + parseInt(months));
+        if (duration === "day") {
+            end.setDate(end.getDate() + 1);
+        } else {
+            end.setMonth(end.getMonth() + parseInt(duration));
+        }
         document.getElementById("editEndDate").value = end.toISOString().split("T")[0];
     }
 
@@ -692,6 +701,12 @@
         calcEdit(document.getElementById("editMonths").value);
 
         const formData = new FormData(this);
+
+        // Convert "day" → "0" for the server
+        if (formData.get("months") === "day") {
+            formData.set("months", "0");
+        }
+
         const payload = new URLSearchParams(formData);
         const response = await fetch('${pageContext.request.contextPath}/record-payment', {
             method: 'POST',

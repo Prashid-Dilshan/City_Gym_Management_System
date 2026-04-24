@@ -31,8 +31,9 @@ public class SaveMemberServlet extends HttpServlet {
         }
 
         // ======================
-        // 🔥 FORM DATA
-        // ======================
+// 🔥 FORM DATA
+// ======================
+
         String name = request.getParameter("name");
         String admissionNo = request.getParameter("admissionNo");
         String phone = request.getParameter("phone");
@@ -41,14 +42,41 @@ public class SaveMemberServlet extends HttpServlet {
         String birthdayDate = request.getParameter("birthdayDate");
         String address = request.getParameter("address");
 
-        int age = Integer.parseInt(request.getParameter("age"));
-        int months = Integer.parseInt(request.getParameter("months"));
+        /* AGE optional */
+        int age = 0;
+        String ageParam = request.getParameter("age");
+
+        if (ageParam != null && !ageParam.isBlank()) {
+            age = Integer.parseInt(ageParam);
+        }
+
+/* MEMBERSHIP DURATION
+   day = 1 Day Membership
+   months = normal monthly membership
+*/
+        String duration = request.getParameter("months");
+
+        int months;
+        if ("day".equals(duration)) {
+            months = 0; // DB eke 0 = 1 Day Membership
+        } else {
+            months = Integer.parseInt(duration);
+        }
 
         String start = request.getParameter("startDate");
         String end = request.getParameter("endDate");
 
+        /* Membership Amount required */
         double amount = Double.parseDouble(request.getParameter("amount"));
-        double regFee = Double.parseDouble(request.getParameter("regFee"));
+
+        /* Registration Fee optional */
+        double regFee = 0;
+
+        String regFeeParam = request.getParameter("regFee");
+
+        if (regFeeParam != null && !regFeeParam.isBlank()) {
+            regFee = Double.parseDouble(regFeeParam);
+        }
 
         // ======================
         // 🔥 PHOTO (BLOB)
