@@ -17,8 +17,12 @@
   int    endedMemberships  = 0;
   double weeklyAvg         = 0.0;
 
-  String[] days7   = new String[7];
-  int[]    counts7 = new int[7];
+  double revToday  = 0.0;
+  double rev7Days  = 0.0;
+  double rev30Days = 0.0;
+
+  String[] days7    = new String[7];
+  int[]    counts7  = new int[7];
   String[] days30   = new String[30];
   int[]    counts30 = new int[30];
 
@@ -73,6 +77,28 @@
     try (PreparedStatement ps = con.prepareStatement(q7); ResultSet rs = ps.executeQuery()) {
       int i = 0;
       while (rs.next() && i < 30) { days30[i] = rs.getString("day"); counts30[i] = rs.getInt("total"); i++; }
+    }
+
+    // ── REVENUE from membership_details ──
+    // Today: membership fee + registration fee where start_date = today
+    String qR1 = "SELECT COALESCE(SUM(amount + registration_fee), 0) " +
+            "FROM membership_details WHERE DATE(start_date) = CURDATE()";
+    try (PreparedStatement ps = con.prepareStatement(qR1); ResultSet rs = ps.executeQuery()) {
+      if (rs.next()) revToday = rs.getDouble(1);
+    }
+
+    // Last 7 days
+    String qR2 = "SELECT COALESCE(SUM(amount + registration_fee), 0) " +
+            "FROM membership_details WHERE start_date >= CURDATE() - INTERVAL 7 DAY";
+    try (PreparedStatement ps = con.prepareStatement(qR2); ResultSet rs = ps.executeQuery()) {
+      if (rs.next()) rev7Days = rs.getDouble(1);
+    }
+
+    // Last 30 days
+    String qR3 = "SELECT COALESCE(SUM(amount + registration_fee), 0) " +
+            "FROM membership_details WHERE start_date >= CURDATE() - INTERVAL 30 DAY";
+    try (PreparedStatement ps = con.prepareStatement(qR3); ResultSet rs = ps.executeQuery()) {
+      if (rs.next()) rev30Days = rs.getDouble(1);
     }
 
   } catch (Exception e) {
@@ -132,8 +158,15 @@
       display: grid;
       grid-template-columns: repeat(2, 1fr);
       gap: 14px;
-      margin-bottom: 18px;
+      margin-bottom: 14px;
       animation: fadeUp 0.4s 0.07s ease both;
+    }
+    .row3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-bottom: 18px;
+      animation: fadeUp 0.4s 0.11s ease both;
     }
 
     /* ── STAT CARD ── */
@@ -175,6 +208,9 @@
     .ic-orange { background: linear-gradient(135deg, #ff6600, #b34400); box-shadow: 0 5px 16px rgba(255,102,0,0.22); }
     .ic-green  { background: linear-gradient(135deg, #00b846, #006e2a); box-shadow: 0 5px 16px rgba(0,184,70,0.22); }
     .ic-gray   { background: linear-gradient(135deg, #3a3a3a, #1a1a1a); box-shadow: 0 5px 16px rgba(0,0,0,0.3); }
+    .ic-gold   { background: linear-gradient(135deg, #ffb300, #e65c00); box-shadow: 0 5px 16px rgba(255,179,0,0.28); }
+    .ic-teal   { background: linear-gradient(135deg, #00bcd4, #007b8a); box-shadow: 0 5px 16px rgba(0,188,212,0.22); }
+    .ic-purple { background: linear-gradient(135deg, #8b00ff, #5500aa); box-shadow: 0 5px 16px rgba(139,0,255,0.22); }
 
     .stat-label {
       font-size: 11px;
@@ -190,11 +226,44 @@
       letter-spacing: 1px;
       line-height: 1;
     }
+    /* Revenue cards — smaller font so long Rs. values fit */
+    .stat-value.rev {
+      font-size: 26px;
+    }
     .stat-sub { font-size: 11px; color: #444; margin-top: 4px; }
 
     .c-red    { color: var(--red); }
     .c-green  { color: #00c860; }
     .c-white  { color: #f0f0f0; }
+    .c-gold   { color: #ffb300; }
+    .c-teal   { color: #00d4e8; }
+    .c-purple { color: #b060ff; }
+
+    /* ── REVENUE SECTION DIVIDER ── */
+    .section-label-row {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      margin-bottom: 12px;
+      margin-top: 30px;
+      animation: fadeUp 0.4s 0.10s ease both;
+
+    }
+    .section-label-row span {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #444;
+      white-space: nowrap;
+    }
+    .section-label-row::before,
+    .section-label-row::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
 
     /* ── CHART CARD ── */
     .chart-card {
@@ -204,7 +273,7 @@
       padding: 20px 24px;
       position: relative;
       overflow: hidden;
-      animation: fadeUp 0.4s 0.14s ease both;
+      animation: fadeUp 0.4s 0.18s ease both;
     }
     .chart-watermark {
       position: absolute;
@@ -232,7 +301,6 @@
     }
     .chart-title i { color: var(--red); }
 
-    /* Toggle buttons */
     .period-toggle {
       display: flex;
       background: var(--surface2);
@@ -265,11 +333,13 @@
     @media (max-width: 800px) {
       .row1 { grid-template-columns: 1fr 1fr; }
       .row2 { grid-template-columns: 1fr 1fr; }
+      .row3 { grid-template-columns: 1fr 1fr; }
     }
     @media (max-width: 480px) {
       body { padding: 12px; }
-      .row1, .row2 { gap: 10px; }
-      .stat-value { font-size: 28px; }
+      .row1, .row2, .row3 { gap: 10px; }
+      .stat-value     { font-size: 28px; }
+      .stat-value.rev { font-size: 22px; }
     }
   </style>
 </head>
@@ -330,7 +400,9 @@
 
 </div>
 
-<!-- ══ ROW 3: Chart ══ -->
+
+
+<!-- ══ ROW 4: Chart ══ -->
 <div class="chart-card">
   <div class="chart-watermark"></div>
   <div class="chart-header">
@@ -346,6 +418,42 @@
   <div class="chart-wrap">
     <canvas id="attendanceChart"></canvas>
   </div>
+</div>
+
+
+<!-- ══ ROW 3: Revenue ══ -->
+<div class="section-label-row">
+  <span><i class="fa-solid fa-coins" style="color:#ffb300;margin-right:5px;"></i>Revenue Collected</span>
+</div>
+<div class="row3">
+
+  <div class="stat-card">
+
+    <div>
+      <div class="stat-label">Today's Revenue</div>
+      <div class="stat-value rev c-gold">Rs. <%= String.format("%,.0f", revToday) %></div>
+      <div class="stat-sub">Membership + Reg. fee today</div>
+    </div>
+  </div>
+
+  <div class="stat-card">
+
+    <div>
+      <div class="stat-label">Last 7 Days</div>
+      <div class="stat-value rev c-teal">Rs. <%= String.format("%,.0f", rev7Days) %></div>
+      <div class="stat-sub">Weekly collections</div>
+    </div>
+  </div>
+
+  <div class="stat-card">
+
+    <div>
+      <div class="stat-label">Last 30 Days</div>
+      <div class="stat-value rev c-purple">Rs. <%= String.format("%,.0f", rev30Days) %></div>
+      <div class="stat-sub">Monthly collections</div>
+    </div>
+  </div>
+
 </div>
 
 <script>
@@ -421,7 +529,6 @@
 </script>
 
 <script src="attendance-popup.js"></script>
-<%@ include file="../footer.jsp" %>
-
+<%@ include file="footer.jsp" %>
 </body>
 </html>

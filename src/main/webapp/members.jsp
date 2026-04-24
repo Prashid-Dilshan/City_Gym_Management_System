@@ -377,7 +377,7 @@
 </div>
 
 <!-- NEW FINGERPRINT USERS -->
-<div class="section-card">
+<div class="section-card" id="newFingerprintSection">
   <div class="section-title">
     <i class="fa-solid fa-user-plus"></i>
     New Fingerprint Users
@@ -426,12 +426,11 @@
       </tr>
       <% } %>
       <% if (!hasNew) { %>
-      <tr class="empty-row">
-        <td colspan="3">
-          <i class="fa-solid fa-fingerprint"></i>
-          No new fingerprint users detected
-        </td>
-      </tr>
+      <script>
+        document.addEventListener("DOMContentLoaded", function () {
+          document.getElementById("newFingerprintSection").style.display = "none";
+        });
+      </script>
       <% } %>
       </tbody>
     </table>
@@ -448,7 +447,7 @@
     <table>
       <thead>
       <tr>
-        <th>FP ID</th>
+        <th>Admission No</th>
         <th>Name</th>
         <th>Gender</th>
         <th>WhatsApp</th>
@@ -462,7 +461,7 @@
       <%
         boolean hasMembers = false;
         try (Connection con = DatabaseUtil.getConnection()) {
-          String sql = "SELECT md.id AS member_id, md.fingerprint_id, md.full_name, md.gender, md.whatsapp, " +
+          String sql = "SELECT md.id AS member_id, md.fingerprint_id, md.admission_no, md.full_name, md.gender, md.whatsapp, " +
                   "ms.months, ms.start_date, ms.end_date " +
                   "FROM member_details md " +
                   "LEFT JOIN membership_details ms ON md.id = ms.member_id";
@@ -472,15 +471,15 @@
               hasMembers = true;
       %>
       <tr>
-        <td><span class="fp-id"><%= rs.getString("fingerprint_id") %></span></td>
+        <td><span class="fp-id"><%= rs.getString("admission_no") %></span></td>
         <td><span class="member-name"><%= rs.getString("full_name") %></span></td>
         <td><%= rs.getString("gender") != null ? rs.getString("gender") : "–" %></td>
         <td><%= rs.getString("whatsapp") != null ? rs.getString("whatsapp") : "–" %></td>
         <td>
           <% if (rs.getObject("months") != null) { %>
           <span style="background:rgba(232,0,13,0.12); color:var(--red); padding:3px 10px; border-radius:20px; font-size:12px; font-weight:600; border:1px solid rgba(232,0,13,0.22);">
-                <%= rs.getInt("months") %> Mo
-              </span>
+    <%= rs.getInt("months") == 0 ? "1 Day" : rs.getInt("months") + " Mo" %>
+</span>
           <% } else { %>
           <span style="color:var(--muted);">N/A</span>
           <% } %>
@@ -711,7 +710,14 @@
               const doc = parser.parseFromString(html, 'text/html');
               const newTbody  = doc.querySelector("#newUsersTable");
               const currTbody = document.querySelector("#newUsersTable");
-              if (newTbody && currTbody) currTbody.innerHTML = newTbody.innerHTML;
+              if (newTbody && currTbody) {
+                currTbody.innerHTML = newTbody.innerHTML;
+
+                const section = document.getElementById("newFingerprintSection");
+                const hasRows = currTbody.querySelectorAll("tr:not(.empty-row)").length > 0;
+
+                section.style.display = hasRows ? "block" : "none";
+              }
             });
   }, 3000);
 

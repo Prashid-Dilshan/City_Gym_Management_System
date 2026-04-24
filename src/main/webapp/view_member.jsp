@@ -151,6 +151,7 @@
             justify-content: space-between;
             font-size: 13px;
             font-weight: 600;
+            gap: 8px;
         }
         .days-pill.green {
             background: rgba(0,200,80,0.08);
@@ -167,11 +168,15 @@
             border: 1px solid rgba(232,0,13,0.25);
             color: var(--red);
         }
-        .days-pill .pill-label { color: #666; font-weight: 500; }
+        .days-pill .pill-left  { display: flex; flex-direction: column; gap: 3px; }
+        .days-pill .pill-label { color: #666; font-weight: 600; font-size: 12px; }
+        .days-pill .pill-sub   { font-size: 11px; opacity: 0.65; font-weight: 500; }
         .days-pill .pill-value {
             font-family: 'Bebas Neue', sans-serif;
             font-size: 22px;
             letter-spacing: 1px;
+            flex-shrink: 0;
+            text-align: right;
         }
 
         /* Action buttons card */
@@ -411,7 +416,10 @@
 
             <!-- Days remaining -->
             <div id="daysPill" class="days-pill green">
-                <span class="pill-label">Days Remaining</span>
+                <div class="pill-left">
+                    <span class="pill-label" id="pillLabel">Days Remaining</span>
+                    <span class="pill-sub" id="pillSub">membership active</span>
+                </div>
                 <span class="pill-value" id="daysLeft">–</span>
             </div>
 
@@ -739,21 +747,37 @@
 
         if (!endDateStr) return;
 
-        const today   = new Date();
-        const endDate = new Date(endDateStr);
+        const today   = new Date(); today.setHours(0,0,0,0);
+        const endDate = new Date(endDateStr); endDate.setHours(0,0,0,0);
         const days    = Math.ceil((endDate - today) / (1000 * 60 * 60 * 24));
-        const pill    = document.getElementById("daysPill");
-        const el      = document.getElementById("daysLeft");
+
+        const pill  = document.getElementById("daysPill");
+        const el    = document.getElementById("daysLeft");
+        const label = document.getElementById("pillLabel");
+        const sub   = document.getElementById("pillSub");
 
         if (days < 0) {
-            el.textContent = "Expired";
-            pill.className = "days-pill red";
+            // Expired – show how many days ago
+            const overdue = Math.abs(days);
+            pill.className    = "days-pill red";
+            label.textContent = "Membership Expired";
+            el.textContent    = overdue + (overdue === 1 ? " day" : " days");
+            sub.textContent   = "ago · renewal needed";
+        } else if (days === 0) {
+            pill.className    = "days-pill orange";
+            label.textContent = "Expires Today";
+            el.textContent    = "Today";
+            sub.textContent   = "last day of membership";
         } else if (days <= 7) {
-            el.textContent = days + " days";
-            pill.className = "days-pill orange";
+            pill.className    = "days-pill orange";
+            label.textContent = "Days Remaining";
+            el.textContent    = days + (days === 1 ? " day" : " days");
+            sub.textContent   = "expiring soon";
         } else {
-            el.textContent = days + " days";
-            pill.className = "days-pill green";
+            pill.className    = "days-pill green";
+            label.textContent = "Days Remaining";
+            el.textContent    = days + " days";
+            sub.textContent   = "membership active";
         }
     });
 </script>
