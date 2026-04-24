@@ -364,6 +364,49 @@
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 4px; }
     ::-webkit-scrollbar-thumb:hover { background: #3a3a3a; }
+
+
+
+    /* ── TABLES ── */
+    .search-box {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 320px;
+      margin-left: auto;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 14px;
+      transition: 0.25s;
+    }
+
+    .search-box:focus-within {
+      border-color: rgba(232,0,13,0.55);
+      box-shadow: 0 0 0 3px rgba(232,0,13,0.10);
+    }
+
+    .search-box i {
+      color: var(--red);
+      font-size: 14px;
+    }
+
+    .search-box input {
+      width: 100%;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--text);
+      font-family: 'Outfit', sans-serif;
+      font-size: 14px;
+    }
+
+    .search-box input::placeholder {
+      color: #555;
+    }
+
+
+
   </style>
 </head>
 <body>
@@ -442,6 +485,11 @@
   <div class="section-title">
     <i class="fa-solid fa-users"></i>
     Saved Members
+
+    <div class="search-box">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      <input type="text" id="memberSearchInput" placeholder="Search by name or admission no..." onkeyup="searchMembers()">
+    </div>
   </div>
   <div class="tbl-wrap">
     <table>
@@ -470,7 +518,9 @@
             while (rs.next()) {
               hasMembers = true;
       %>
-      <tr>
+      <tr class="member-row"
+          data-name="<%= rs.getString("full_name") != null ? rs.getString("full_name").toLowerCase() : "" %>"
+          data-admission="<%= rs.getString("admission_no") != null ? rs.getString("admission_no").toLowerCase() : "" %>">
         <td><span class="fp-id"><%= rs.getString("admission_no") %></span></td>
         <td><span class="member-name"><%= rs.getString("full_name") %></span></td>
         <td><%= rs.getString("gender") != null ? rs.getString("gender") : "–" %></td>
@@ -723,6 +773,22 @@
 
   function onlyNumbers(input) {
     input.value = input.value.replace(/[^0-9]/g, '');
+  }
+
+  function searchMembers() {
+    const keyword = document.getElementById("memberSearchInput").value.toLowerCase().trim();
+    const rows = document.querySelectorAll(".member-row");
+
+    rows.forEach(row => {
+      const name = row.getAttribute("data-name") || "";
+      const admission = row.getAttribute("data-admission") || "";
+
+      if (name.includes(keyword) || admission.includes(keyword)) {
+        row.style.display = "";
+      } else {
+        row.style.display = "none";
+      }
+    });
   }
 
 </script>
