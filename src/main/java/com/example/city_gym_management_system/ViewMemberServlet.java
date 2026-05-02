@@ -165,16 +165,50 @@ public class ViewMemberServlet extends HttpServlet {
             // 🔥 DELETE PAYMENT RECORD
             // ======================
             if ("deletePayment".equals(action)) {
-                String paymentId = request.getParameter("paymentId");
+                int paymentId = Integer.parseInt(request.getParameter("paymentId"));
 
-                String q = "DELETE FROM payment_history WHERE id=?";
-                PreparedStatement ps = con.prepareStatement(q);
-                ps.setInt(1, Integer.parseInt(paymentId));
-                ps.executeUpdate();
-                ps.close();
+                con.setAutoCommit(false);
 
-                response.sendRedirect("view-member?fid=" + fid);
-                return;
+                try {
+                    int memberId = 0;
+
+                    String getMemberSql = "SELECT member_id FROM payment_history WHERE id=?";
+                    PreparedStatement getPs = con.prepareStatement(getMemberSql);
+                    getPs.setInt(1, paymentId);
+                    ResultSet getRs = getPs.executeQuery();
+
+                    if (getRs.next()) {
+                        memberId = getRs.getInt("member_id");
+                    }
+
+                    getRs.close();
+                    getPs.close();
+
+                    String deletePaymentSql = "DELETE FROM payment_history WHERE id=?";
+                    PreparedStatement ps1 = con.prepareStatement(deletePaymentSql);
+                    ps1.setInt(1, paymentId);
+                    ps1.executeUpdate();
+                    ps1.close();
+
+                    if (memberId > 0) {
+                        String deleteMembershipSql = "DELETE FROM membership_details WHERE member_id=?";
+                        PreparedStatement ps2 = con.prepareStatement(deleteMembershipSql);
+                        ps2.setInt(1, memberId);
+                        ps2.executeUpdate();
+                        ps2.close();
+                    }
+
+                    con.commit();
+
+                    response.sendRedirect("view-member?fid=" + fid);
+                    return;
+
+                } catch (Exception ex) {
+                    con.rollback();
+                    throw ex;
+                } finally {
+                    con.setAutoCommit(true);
+                }
             }
 
 
