@@ -146,27 +146,99 @@
     ::-webkit-scrollbar-track { background:transparent; }
     ::-webkit-scrollbar-thumb { background:#2a2a2a; border-radius:4px; }
 
+    /* ── SEARCH BAR ── */
+    .search-wrapper {
+      position: relative;
+      margin-bottom: 18px;
+      animation: fadeUp 0.3s ease both;
+    }
+    .search-box {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px 44px 14px 50px;
+      font-family: 'Outfit', sans-serif;
+      font-size: 15px;
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.22s, box-shadow 0.22s;
+    }
+    .search-box:focus {
+      border-color: rgba(232,0,13,0.5);
+      box-shadow: 0 0 0 3px rgba(232,0,13,0.08);
+    }
+    .search-box::placeholder { color: #3a3a3a; }
+    .search-icon-left {
+      position: absolute;
+      left: 18px; top: 50%;
+      transform: translateY(-50%);
+      color: var(--red);
+      font-size: 16px;
+      pointer-events: none;
+    }
+    .search-clear-btn {
+      position: absolute;
+      right: 16px; top: 50%;
+      transform: translateY(-50%);
+      background: none; border: none;
+      color: #555; font-size: 14px;
+      cursor: pointer; display: none;
+      line-height: 1;
+    }
+    .search-clear-btn:hover { color: #999; }
+    .search-results-dropdown {
+      display: none;
+      position: fixed;
+      background: #161616;
+      border: 1px solid rgba(255,255,255,0.09);
+      border-radius: 14px;
+      overflow: hidden;
+      z-index: 99999;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.85);
+    }
+    .search-result-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 12px 18px;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      text-decoration: none;
+      transition: background 0.15s;
+    }
+    .search-result-item:last-child { border-bottom: none; }
+    .search-result-item:hover { background: rgba(232,0,13,0.06); }
+    .search-avatar {
+      width: 38px; height: 38px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #e8000d, #9a0008);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 700; color: #fff;
+      flex-shrink: 0;
+    }
+    .search-result-name { font-size: 14px; font-weight: 600; color: #f0f0f0; }
+    .search-result-meta { font-size: 12px; color: #555; margin-top: 2px; }
+    .search-arrow { margin-left: auto; color: #333; font-size: 12px; }
+    .search-msg { padding: 20px; text-align: center; color: #444; font-size: 13px; }
+
     /* ── ROWS ── */
     .row1 {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 14px;
       margin-bottom: 14px;
-      animation: fadeUp 0.4s ease both;
     }
     .row2 {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
       gap: 14px;
       margin-bottom: 14px;
-      animation: fadeUp 0.4s 0.07s ease both;
     }
     .row3 {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 14px;
       margin-bottom: 18px;
-      animation: fadeUp 0.4s 0.11s ease both;
     }
 
     /* ── STAT CARD ── */
@@ -184,7 +256,6 @@
     }
     .stat-card:hover {
       border-color: rgba(232,0,13,0.30);
-      transform: translateY(-2px);
     }
     .stat-card::after {
       content: '';
@@ -247,7 +318,6 @@
       margin-bottom: 12px;
       margin-top: 30px;
       animation: fadeUp 0.4s 0.10s ease both;
-
     }
     .section-label-row span {
       font-size: 11px;
@@ -345,6 +415,23 @@
 </head>
 <body>
 
+<!-- ══ MEMBER SEARCH ══ -->
+<div class="search-wrapper" id="searchWrapper">
+  <i class="fa-solid fa-magnifying-glass search-icon-left"></i>
+  <input
+          type="text"
+          id="memberSearchBox"
+          class="search-box"
+          placeholder="Search member by name or admission number..."
+          autocomplete="off"
+  >
+  <button class="search-clear-btn" id="searchClearBtn" onclick="clearMemberSearch()">
+    <i class="fa-solid fa-xmark"></i>
+  </button>
+</div>
+<!-- Dropdown appended to body to escape all stacking contexts -->
+<div class="search-results-dropdown" id="memberSearchResults"></div>
+
 <!-- ══ ROW 1: Total Members | Today Attendance | Weekly Avg ══ -->
 <div class="row1">
 
@@ -400,8 +487,6 @@
 
 </div>
 
-
-
 <!-- ══ ROW 4: Chart ══ -->
 <div class="chart-card">
   <div class="chart-watermark"></div>
@@ -420,7 +505,6 @@
   </div>
 </div>
 
-
 <!-- ══ ROW 3: Revenue ══ -->
 <div class="section-label-row">
   <span><i class="fa-solid fa-coins" style="color:#ffb300;margin-right:5px;"></i>Revenue Collected</span>
@@ -428,7 +512,6 @@
 <div class="row3">
 
   <div class="stat-card">
-
     <div>
       <div class="stat-label">Today's Revenue</div>
       <div class="stat-value rev c-gold">Rs. <%= String.format("%,.0f", revToday) %></div>
@@ -437,7 +520,6 @@
   </div>
 
   <div class="stat-card">
-
     <div>
       <div class="stat-label">Last 7 Days</div>
       <div class="stat-value rev c-teal">Rs. <%= String.format("%,.0f", rev7Days) %></div>
@@ -446,7 +528,6 @@
   </div>
 
   <div class="stat-card">
-
     <div>
       <div class="stat-label">Last 30 Days</div>
       <div class="stat-value rev c-purple">Rs. <%= String.format("%,.0f", rev30Days) %></div>
@@ -526,6 +607,82 @@
     chart.data.datasets[0].backgroundColor = makeGrad();
     chart.update();
   }
+
+  // ══ MEMBER SEARCH LOGIC ══
+  (function () {
+    const box      = document.getElementById('memberSearchBox');
+    const dropdown = document.getElementById('memberSearchResults');
+    const clearBtn = document.getElementById('searchClearBtn');
+    let timer = null;
+
+    function positionDropdown() {
+      var rect = box.getBoundingClientRect();
+      dropdown.style.top   = (rect.bottom + 6) + 'px';
+      dropdown.style.left  = rect.left + 'px';
+      dropdown.style.width = rect.width + 'px';
+    }
+
+    box.addEventListener('input', function () {
+      const q = this.value.trim();
+      clearBtn.style.display = q ? 'block' : 'none';
+
+      if (!q) {
+        dropdown.style.display = 'none';
+        return;
+      }
+
+      positionDropdown();
+      dropdown.style.display = 'block';
+      dropdown.innerHTML = '<div class="search-msg"><i class="fa-solid fa-spinner fa-spin" style="color:#e8000d;margin-right:6px;"></i>Searching...</div>';
+
+      clearTimeout(timer);
+      timer = setTimeout(function () {
+        fetch('member-search?q=' + encodeURIComponent(q))
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                  if (!data.length) {
+                    dropdown.innerHTML = '<div class="search-msg"><i class="fa-solid fa-user-slash" style="display:block;font-size:22px;margin-bottom:8px;color:#2a2a2a;"></i>No members found</div>';
+                    return;
+                  }
+                  dropdown.innerHTML = data.map(function(m) {
+                    var initials = m.name.split(' ').map(function(w){ return w[0]; }).join('').slice(0,2).toUpperCase();
+                    return '<a href="view-member?fid=' + encodeURIComponent(m.fid) + '" class="search-result-item">' +
+                            '<div class="search-avatar">' + initials + '</div>' +
+                            '<div>' +
+                            '<div class="search-result-name">' + m.name + '</div>' +
+                            '<div class="search-result-meta">' + m.admNo + ' &nbsp;&middot;&nbsp; ' + m.gender + '</div>' +
+                            '</div>' +
+                            '<i class="fa-solid fa-arrow-right search-arrow"></i>' +
+                            '</a>';
+                  }).join('');
+                })
+                .catch(function() {
+                  dropdown.innerHTML = '<div class="search-msg">Search failed. Please try again.</div>';
+                });
+      }, 300);
+    });
+
+    window.addEventListener('scroll', function() {
+      if (dropdown.style.display === 'block') positionDropdown();
+    }, true);
+
+    window.addEventListener('resize', function() {
+      if (dropdown.style.display === 'block') positionDropdown();
+    });
+
+    document.addEventListener('click', function(e) {
+      if (!document.getElementById('searchWrapper').contains(e.target)) {
+        dropdown.style.display = 'none';
+      }
+    });
+
+    window.clearMemberSearch = function () {
+      box.value = '';
+      clearBtn.style.display = 'none';
+      dropdown.style.display = 'none';
+      box.focus();
+    };
+  })();
 </script>
 
 <script src="attendance-popup.js"></script>

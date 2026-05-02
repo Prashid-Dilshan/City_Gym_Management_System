@@ -1,4 +1,6 @@
+
 <%@ page contentType="text/html;charset=UTF-8" %>
+<%@ page import="java.util.*" %>
 <%
     String role = (String) session.getAttribute("userRole");
     if (!"admin".equals(role)) {
@@ -379,6 +381,86 @@
             .info-grid { grid-template-columns: 1fr 1fr; }
             .edit-grid { grid-template-columns: 1fr; }
         }
+
+        .payment-table-wrap {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        .payment-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .payment-table th {
+            text-align: left;
+            font-size: 11px;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 12px 10px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .payment-table td {
+            padding: 13px 10px;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            font-size: 14px;
+            color: #ddd;
+        }
+
+        .payment-table tr:hover {
+            background: rgba(255,255,255,0.025);
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .status-paid {
+            background: rgba(0,200,80,0.10);
+            color: #00c850;
+            border: 1px solid rgba(0,200,80,0.22);
+        }
+
+        .status-other {
+            background: rgba(255,160,0,0.10);
+            color: #ffa000;
+            border: 1px solid rgba(255,160,0,0.22);
+        }
+
+        .empty-history {
+            padding: 18px;
+            border-radius: 12px;
+            background: rgba(255,255,255,0.03);
+            border: 1px dashed var(--border);
+            color: #777;
+            font-size: 14px;
+            text-align: center;
+        }
+
+
+        .delete-payment-btn {
+            width: 34px;
+            height: 34px;
+            border-radius: 9px;
+            border: 1px solid rgba(232,0,13,0.25);
+            background: rgba(232,0,13,0.10);
+            color: var(--red);
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .delete-payment-btn:hover {
+            background: rgba(232,0,13,0.22);
+            transform: translateY(-1px);
+        }
+
     </style>
 </head>
 <body>
@@ -522,7 +604,83 @@
 
         </div>
     </div>
+
+    <!-- Payment History -->
+    <div class="info-card">
+        <div class="card-title">
+            <i class="fa-solid fa-clock-rotate-left"></i> Payment History
+        </div>
+
+        <%
+            List<Map<String, Object>> paymentHistory =
+                    (List<Map<String, Object>>) request.getAttribute("paymentHistory");
+        %>
+
+        <% if (paymentHistory != null && !paymentHistory.isEmpty()) { %>
+        <div class="payment-table-wrap">
+            <table class="payment-table">
+                <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Payment Date</th>
+                    <th>Package</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+                </thead>
+                <tbody>
+                <%
+                    int count = 1;
+                    for (Map<String, Object> p : paymentHistory) {
+                        Integer pMonths = (Integer) p.get("months");
+                        String packageText = (pMonths != null && pMonths == 0) ? "1 Day" : pMonths + " Months";
+                        String status = String.valueOf(p.get("status"));
+                        boolean paid = "PAID".equalsIgnoreCase(status) || "SUCCESS".equalsIgnoreCase(status);
+                %>
+                <tr>
+                    <td><%= count++ %></td>
+                    <td><%= p.get("paymentDate") %></td>
+                    <td><span class="pkg-badge"><%= packageText %></span></td>
+                    <td>Rs. <%= p.get("amount") %></td>
+                    <td>
+                    <span class="status-badge <%= paid ? "status-paid" : "status-other" %>">
+                        <%= status %>
+                    </span>
+                    </td>
+                    <td>
+                        <form action="view-member" method="post" style="display:inline;">
+                            <input type="hidden" name="action" value="deletePayment">
+                            <input type="hidden" name="fid" value="${fid}">
+                            <input type="hidden" name="paymentId" value="<%= p.get("id") %>">
+
+                            <button type="submit"
+                                    class="delete-payment-btn"
+                                    title="Delete Payment"
+                                    onclick="return confirm('Are you sure you want to delete this payment record?')">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                <% } %>
+                </tbody>
+            </table>
+        </div>
+        <% } else { %>
+        <div class="empty-history">
+            <i class="fa-solid fa-circle-info"></i>
+            No payment history found for this member.
+        </div>
+        <% } %>
+    </div>
+
+
+
 </div>
+
+
+
 
 <!-- ═══════════════════ EDIT SECTION ═══════════════════ -->
 <div id="editSection">

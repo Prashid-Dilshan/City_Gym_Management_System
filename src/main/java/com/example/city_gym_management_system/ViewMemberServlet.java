@@ -14,6 +14,11 @@ import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.http.Part;
 import java.io.InputStream;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
 @MultipartConfig
 @WebServlet("/view-member")
 public class ViewMemberServlet extends HttpServlet {
@@ -109,6 +114,10 @@ public class ViewMemberServlet extends HttpServlet {
 
             rs.close();
             ps.close();
+
+            List<Map<String, Object>> paymentHistory = loadPaymentHistory(con, memberId);
+            request.setAttribute("paymentHistory", paymentHistory);
+
             con.close();
 
         } catch (Exception e) {
@@ -134,6 +143,9 @@ public class ViewMemberServlet extends HttpServlet {
         request.getRequestDispatcher("view_member.jsp").forward(request, response);
     }
 
+
+
+
     // ======================
     // 🔥 UPDATE + DELETE
     // ======================
@@ -146,6 +158,26 @@ public class ViewMemberServlet extends HttpServlet {
             Connection con = DatabaseUtil.getConnection();
 
             boolean hasBirthdayColumn = hasColumn(con, "member_details", "birthday_date");
+
+
+
+            // ======================
+            // 🔥 DELETE PAYMENT RECORD
+            // ======================
+            if ("deletePayment".equals(action)) {
+                String paymentId = request.getParameter("paymentId");
+
+                String q = "DELETE FROM payment_history WHERE id=?";
+                PreparedStatement ps = con.prepareStatement(q);
+                ps.setInt(1, Integer.parseInt(paymentId));
+                ps.executeUpdate();
+                ps.close();
+
+                response.sendRedirect("view-member?fid=" + fid);
+                return;
+            }
+
+
 
             // ======================
             // 🔥 DELETE (DEVICE + DB)
@@ -195,12 +227,12 @@ public class ViewMemberServlet extends HttpServlet {
                 return;
             }
 
-                // ======================
-                // 🔥 UPDATE PERSONAL INFO
-                // ======================
-                if ("update".equals(action) || "updatePersonal".equals(action)) {
+            // ======================
+            // 🔥 UPDATE PERSONAL INFO
+            // ======================
+            if ("update".equals(action) || "updatePersonal".equals(action)) {
 
-        // 🔥 PHOTO UPDATE PART
+                // 🔥 PHOTO UPDATE PART
                 Part filePart = request.getPart("photo");
                 InputStream photoStream = null;
 
@@ -217,8 +249,8 @@ public class ViewMemberServlet extends HttpServlet {
                 String gender = request.getParameter("gender");
                 int age = Integer.parseInt(request.getParameter("age"));
                 String whatsapp = request.getParameter("whatsapp");
-                        String birthdayDate = request.getParameter("birthdayDate");
-                        String address = request.getParameter("address");
+                String birthdayDate = request.getParameter("birthdayDate");
+                String address = request.getParameter("address");
 
                 // 🔥 update member
                 String q1;
@@ -281,4 +313,41 @@ public class ViewMemberServlet extends HttpServlet {
             return columns.next();
         }
     }
+
+
+
+
+
+
+
+    private List<Map<String, Object>> loadPaymentHistory(Connection con, int memberId) throws SQLException {
+        String sql = "SELECT id, amount, months, payment_date, status " +
+                "FROM payment_history " +
+                "WHERE member_id=? " +
+                "ORDER BY payment_date DESC, id DESC";
+
+        List<Map<String, Object>> history = new ArrayList<>();
+
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, memberId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Map<String, Object> row = new LinkedHashMap<>();
+                    row.put("id", rs.getInt("id"));
+                    row.put("amount", rs.getDouble("amount"));
+                    row.put("months", rs.getInt("months"));
+                    row.put("paymentDate", rs.getString("payment_date"));
+                    row.put("status", rs.getString("status"));
+                    history.add(row);
+                }
+            }
+        }
+
+        return history;
+    }
+
+
+
+
 }
