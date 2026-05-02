@@ -55,13 +55,24 @@ public class AttendanceStreamServlet extends HttpServlet {
                         String endDate  = rs.getString("end_date");
 
                         // Days remaining
+                        // Days remaining
                         String daysLeft = "-";
                         if (endDate != null) {
                             try {
                                 java.time.LocalDate end   = java.time.LocalDate.parse(endDate);
                                 java.time.LocalDate today = java.time.LocalDate.now();
+
                                 long days = java.time.temporal.ChronoUnit.DAYS.between(today, end);
-                                daysLeft = days >= 0 ? days + " days" : "Expired";
+
+                                if (days < 0) {
+                                    long expiredDays = Math.abs(days);
+                                    daysLeft = "Expired " + expiredDays + (expiredDays == 1 ? " day ago" : " days ago");
+                                } else if (days == 0) {
+                                    daysLeft = "Expires Today";
+                                } else {
+                                    daysLeft = days + (days == 1 ? " day" : " days");
+                                }
+
                             } catch (Exception ignored) {
                                 System.err.println("[APP WARNING] Error parsing end date: " + endDate);
                             }

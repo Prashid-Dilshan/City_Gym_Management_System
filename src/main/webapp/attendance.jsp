@@ -357,7 +357,7 @@
                 String cssClass = "badge-active";
                 String icon     = "fa-circle-check";
 
-                if ("Expired".equals(daysLeft)) {
+                if (daysLeft != null && daysLeft.startsWith("Expired")) {
                     cssClass = "badge-expired";
                     icon     = "fa-circle-xmark";
                 } else if (!"-".equals(daysLeft)) {
