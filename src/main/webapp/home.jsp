@@ -257,6 +257,10 @@
     .stat-card:hover {
       border-color: rgba(232,0,13,0.30);
     }
+    .stat-card-link:hover {
+      border-color: rgba(232,0,13,0.45);
+      box-shadow: 0 0 0 1px rgba(232,0,13,0.15);
+    }
     .stat-card::after {
       content: '';
       position: absolute;
@@ -444,12 +448,12 @@
     </div>
   </div>
 
-  <div class="stat-card">
+  <div class="stat-card stat-card-link" onclick="navigateTo('attendance.jsp')" style="cursor:pointer;">
     <div class="stat-icon ic-red"><i class="fa-solid fa-fingerprint"></i></div>
     <div>
       <div class="stat-label">Today Attendance</div>
       <div class="stat-value c-red"><%= todayCount %></div>
-      <div class="stat-sub">Scanned today</div>
+      <div class="stat-sub">Click to view &rarr;</div>
     </div>
   </div>
 
@@ -467,21 +471,21 @@
 <!-- ══ ROW 2: Active Memberships | Ended Memberships ══ -->
 <div class="row2">
 
-  <div class="stat-card">
+  <div class="stat-card stat-card-link" onclick="navigateTo('active_memberships.jsp')" style="cursor:pointer;">
     <div class="stat-icon ic-green"><i class="fa-solid fa-id-card"></i></div>
     <div>
       <div class="stat-label">Active Memberships</div>
       <div class="stat-value c-green"><%= activeMemberships %></div>
-      <div class="stat-sub">End date not reached</div>
+      <div class="stat-sub">Click to view &rarr;</div>
     </div>
   </div>
 
-  <div class="stat-card">
+  <div class="stat-card stat-card-link" onclick="navigateTo('expired_memberships.jsp')" style="cursor:pointer;">
     <div class="stat-icon ic-gray"><i class="fa-solid fa-calendar-xmark"></i></div>
     <div>
       <div class="stat-label">Ended Memberships</div>
       <div class="stat-value c-red"><%= endedMemberships %></div>
-      <div class="stat-sub">Expired memberships</div>
+      <div class="stat-sub">Click to view &rarr;</div>
     </div>
   </div>
 
@@ -606,6 +610,17 @@
     chart.data.datasets[0].data = is7 ? data7 : data30;
     chart.data.datasets[0].backgroundColor = makeGrad();
     chart.update();
+  }
+
+  // ══ NAVIGATION HELPER ══
+  function navigateTo(url) {
+    // Try parent iframe (sidebar layout)
+    try {
+      var frame = window.parent.document.getElementById('contentFrame');
+      if (frame) { frame.src = url; return; }
+    } catch(e) {}
+    // Fallback: direct navigation
+    window.location.href = url;
   }
 
   // ══ MEMBER SEARCH LOGIC ══
