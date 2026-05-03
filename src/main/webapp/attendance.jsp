@@ -122,6 +122,59 @@
         }
         .status-msg i { color: #00b450; }
 
+        /* ── FILTER TABS ── */
+        .filter-bar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 16px;
+            animation: fadeUp 0.4s 0.06s ease both;
+        }
+        .filter-tab {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            padding: 9px 20px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: var(--muted);
+            transition: all 0.18s ease;
+            user-select: none;
+            letter-spacing: 0.3px;
+        }
+        .filter-tab i { font-size: 12px; }
+        .filter-tab:hover {
+            border-color: rgba(232,0,13,0.3);
+            color: #ccc;
+            background: var(--surface2);
+        }
+        .filter-tab.active {
+            background: linear-gradient(135deg, var(--red), var(--red-dim));
+            border-color: var(--red);
+            color: #fff;
+            box-shadow: 0 4px 14px var(--red-glow);
+        }
+
+        /* count chip inside filter tab */
+        .tab-count {
+            background: rgba(255,255,255,0.18);
+            color: #fff;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 2px 7px;
+            border-radius: 20px;
+            min-width: 20px;
+            text-align: center;
+        }
+        .filter-tab:not(.active) .tab-count {
+            background: rgba(255,255,255,0.06);
+            color: #666;
+        }
+
         /* ── TABLE CARD ── */
         .table-card {
             background: var(--surface);
@@ -149,6 +202,17 @@
             letter-spacing: 0.7px;
         }
         .table-card-title i { color: var(--red); }
+
+        /* visible row counter */
+        .row-counter {
+            font-size: 13px;
+            color: var(--muted);
+            font-weight: 500;
+        }
+        .row-counter span {
+            color: var(--red);
+            font-weight: 700;
+        }
 
         .tbl-wrap { overflow-x: auto; }
 
@@ -259,6 +323,9 @@
         .empty-state i { font-size: 36px; opacity: 0.3; }
         .empty-state p { font-size: 15px; }
 
+        /* hidden rows when filtered */
+        tr.filtered-hidden { display: none !important; }
+
         /* ── ANIMATION ── */
         @keyframes fadeUp {
             from { opacity:0; transform:translateY(14px); }
@@ -298,6 +365,25 @@
 </div>
 <% } %>
 
+<!-- FILTER TABS -->
+<div class="filter-bar">
+    <div class="filter-tab active" id="tab-today" onclick="setFilter('today')">
+        <i class="fa-solid fa-calendar-day"></i>
+        Today
+        <span class="tab-count" id="count-today">0</span>
+    </div>
+    <div class="filter-tab" id="tab-7days" onclick="setFilter('7days')">
+        <i class="fa-solid fa-calendar-week"></i>
+        Last 7 Days
+        <span class="tab-count" id="count-7days">0</span>
+    </div>
+    <div class="filter-tab" id="tab-30days" onclick="setFilter('30days')">
+        <i class="fa-solid fa-calendar"></i>
+        Last 30 Days
+        <span class="tab-count" id="count-30days">0</span>
+    </div>
+</div>
+
 <%-- ATTENDANCE TABLE --%>
 <%
     List<Map<String, String>> attendanceLogs =
@@ -311,6 +397,9 @@
             <i class="fa-solid fa-fingerprint"></i>
             Fingerprint Attendance Records
         </div>
+        <div class="row-counter">
+            Showing <span id="visibleCount">0</span> records
+        </div>
     </div>
 
     <div class="tbl-wrap">
@@ -323,7 +412,7 @@
                 <th>Name</th>
                 <th>Date</th>
                 <th>Time</th>
-                <th>Membership Remaining</th>
+                <th>Membership Status</th>
             </tr>
             </thead>
             <tbody id="attendanceTable">
@@ -356,18 +445,31 @@
                 String daysLeft = log.get("daysLeft");
                 String cssClass = "badge-active";
                 String icon     = "fa-circle-check";
+                String badgeLabel = daysLeft;
 
                 if (daysLeft != null && daysLeft.startsWith("Expired")) {
                     cssClass = "badge-expired";
                     icon     = "fa-circle-xmark";
-                } else if (!"-".equals(daysLeft)) {
+                    // Extract expired days count if available (e.g. "Expired -5 days" → "Expired 5 days ago")
+                    try {
+                        String numPart = daysLeft.replaceAll("[^0-9\\-]", "").trim();
+                        int expDays = Math.abs(Integer.parseInt(numPart));
+                        badgeLabel = "Expired " + expDays + " day" + (expDays == 1 ? "" : "s") + " ago";
+                    } catch (Exception ex) {
+                        badgeLabel = daysLeft; // fallback to original
+                    }
+                } else if (daysLeft != null && !"-".equals(daysLeft)) {
                     try {
                         int d = Integer.parseInt(daysLeft.replace(" days","").trim());
                         if (d <= 7) { cssClass = "badge-warning"; icon = "fa-triangle-exclamation"; }
+                        badgeLabel = d + " day" + (d == 1 ? "" : "s") + " left";
                     } catch (Exception ignored) {}
                 }
+
+                // Extract just the date part (yyyy-MM-dd) for JS filtering
+                String logDate = log.get("date"); // expected format: yyyy-MM-dd
             %>
-            <tr>
+            <tr data-date="<%= logDate %>">
                 <td><span class="row-num"><%= i++ %></span></td>
                 <td><span class="adm-no"><%= logAdmission %></span></td>
                 <td><span class="member-name"><%= logName %></span></td>
@@ -386,7 +488,7 @@
                 <td>
             <span class="status-badge <%= cssClass %>">
               <i class="fa-solid <%= icon %>" style="margin-right:5px; font-size:11px;"></i>
-              <%= daysLeft %>
+              <%= badgeLabel %>
             </span>
                 </td>
             </tr>
@@ -403,17 +505,126 @@
 </div>
 
 <script>
+    // ── DATE FILTER ──────────────────────────────────────────────────────────
+    let currentFilter = 'today';
+
+    function getTodayStr() {
+        const d = new Date();
+        const yyyy = d.getFullYear();
+        const mm   = String(d.getMonth() + 1).padStart(2, '0');
+        const dd   = String(d.getDate()).padStart(2, '0');
+        return yyyy + '-' + mm + '-' + dd;
+    }
+
+    function getCutoffStr(daysBack) {
+        const d = new Date();
+        d.setDate(d.getDate() - daysBack);
+        const yyyy = d.getFullYear();
+        const mm   = String(d.getMonth() + 1).padStart(2, '0');
+        const dd   = String(d.getDate()).padStart(2, '0');
+        return yyyy + '-' + mm + '-' + dd;
+    }
+
+    function setFilter(filter) {
+        currentFilter = filter;
+
+        // update active tab
+        document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+        document.getElementById('tab-' + filter).classList.add('active');
+
+        applyFilter();
+    }
+
+    function applyFilter() {
+        const tbody = document.getElementById('attendanceTable');
+        if (!tbody) return;
+
+        const today    = getTodayStr();
+        const cut7     = getCutoffStr(6);   // today + 6 days back = 7-day window
+        const cut30    = getCutoffStr(29);  // today + 29 days back = 30-day window
+
+        const rows = tbody.querySelectorAll('tr[data-date]');
+
+        let visible = 0;
+
+        rows.forEach(row => {
+            const rowDate = row.getAttribute('data-date'); // yyyy-MM-dd
+
+            let show = false;
+
+            if (currentFilter === 'today') {
+                show = (rowDate === today);
+            } else if (currentFilter === '7days') {
+                show = (rowDate >= cut7 && rowDate <= today);
+            } else if (currentFilter === '30days') {
+                show = (rowDate >= cut30 && rowDate <= today);
+            }
+
+            if (show) {
+                row.classList.remove('filtered-hidden');
+                visible++;
+            } else {
+                row.classList.add('filtered-hidden');
+            }
+        });
+
+        // update visible counter
+        const counter = document.getElementById('visibleCount');
+        if (counter) counter.textContent = visible;
+
+        // renumber visible rows
+        let num = 1;
+        rows.forEach(row => {
+            if (!row.classList.contains('filtered-hidden')) {
+                const numEl = row.querySelector('.row-num');
+                if (numEl) numEl.textContent = num++;
+            }
+        });
+    }
+
+    function updateTabCounts() {
+        const tbody = document.getElementById('attendanceTable');
+        if (!tbody) return;
+
+        const today  = getTodayStr();
+        const cut7   = getCutoffStr(6);
+        const cut30  = getCutoffStr(29);
+
+        let cToday = 0, c7 = 0, c30 = 0;
+
+        tbody.querySelectorAll('tr[data-date]').forEach(row => {
+            const rowDate = row.getAttribute('data-date');
+            if (rowDate === today) cToday++;
+            if (rowDate >= cut7  && rowDate <= today) c7++;
+            if (rowDate >= cut30 && rowDate <= today) c30++;
+        });
+
+        document.getElementById('count-today').textContent  = cToday;
+        document.getElementById('count-7days').textContent  = c7;
+        document.getElementById('count-30days').textContent = c30;
+    }
+
+    // ── LIVE REFRESH ─────────────────────────────────────────────────────────
     function loadAttendance() {
         fetch('fingerprint-data?page=logs')
             .then(res => res.text())
             .then(html => {
-                const parser = new DOMParser();
-                const doc    = parser.parseFromString(html, 'text/html');
+                const parser   = new DOMParser();
+                const doc      = parser.parseFromString(html, 'text/html');
                 const newTbody  = doc.querySelector("#attendanceTable");
                 const currTbody = document.querySelector("#attendanceTable");
-                if (newTbody && currTbody) currTbody.innerHTML = newTbody.innerHTML;
+                if (newTbody && currTbody) {
+                    currTbody.innerHTML = newTbody.innerHTML;
+                    updateTabCounts();
+                    applyFilter();
+                }
             });
     }
+
+    // Init on page load
+    updateTabCounts();
+    applyFilter();
+
     setInterval(loadAttendance, 5000);
 </script>
 

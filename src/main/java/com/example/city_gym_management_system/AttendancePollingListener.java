@@ -73,48 +73,7 @@ public class AttendancePollingListener implements ServletContextListener {
                 return;
             }
 
-            // 🔥 ================= MIDNIGHT RESET (FIXED) =================
-            try {
-
-                String todayStr = java.time.LocalDate.now().toString();
-                String lastClean = "";
-
-                // 🔹 GET last clean date from DB
-                PreparedStatement psGet = con.prepareStatement(
-                        "SELECT setting_value FROM system_settings WHERE setting_key='last_clean_date'"
-                );
-
-                ResultSet rs = psGet.executeQuery();
-
-                if (rs.next()) {
-                    lastClean = rs.getString("setting_value");
-                }
-
-                rs.close();
-                psGet.close();
-
-                // 🔹 ONLY CLEAN ONCE PER DAY
-                if (!todayStr.equals(lastClean)) {
-
-                    zk.invoke("ClearGLog", new Variant(1));
-                    System.out.println("🧹 Device logs cleared");
-
-                    // 🔹 UPDATE DB
-                    PreparedStatement psUpdate = con.prepareStatement(
-                            "REPLACE INTO system_settings (setting_key, setting_value) VALUES ('last_clean_date', ?)"
-                    );
-
-                    psUpdate.setString(1, todayStr);
-                    psUpdate.executeUpdate();
-                    psUpdate.close();
-                }
-
-            } catch (Exception e) {
-                System.err.println("[ATTENDANCE POLL WARNING] Midnight reset failed: " + e.getMessage());
-            }
-
-
-            // 🔥 READ LOGS AFTER CLEAN
+            // 🔥 READ LOGS FROM DEVICE (no clearing - filter by date in UI instead)
             zk.invoke("ReadGeneralLogData", new Variant(1));
 
             String insertSql =
