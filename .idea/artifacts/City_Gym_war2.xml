@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="war" build-on-make="true" name="City_Gym:war2">
+    <output-path>$PROJECT_DIR$/out/artifacts/City_Gym_war2</output-path>
+    <root id="archive" name="City_Gym_Management_System_war.war">
+      <element id="artifact" artifact-name="City_Gym_Management_System:war exploded" />
+    </root>
+  </artifact>
+</component>

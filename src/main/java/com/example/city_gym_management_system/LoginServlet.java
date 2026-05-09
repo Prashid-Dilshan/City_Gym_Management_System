@@ -35,7 +35,7 @@ public class LoginServlet extends HttpServlet {
         HttpSession session = request.getSession(true);
         session.setMaxInactiveInterval(30 * 60);
 
-        if ("a".equals(username) && "1".equals(password)) {
+        if ("citygym".equals(username) && "gym123".equals(password)) {
             session.setAttribute("userRole", "admin");
             response.sendRedirect("admin_dashboard.jsp");
         }

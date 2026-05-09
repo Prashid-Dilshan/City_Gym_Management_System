@@ -122,14 +122,29 @@
         }
         .status-msg i { color: #00b450; }
 
-        /* ── FILTER TABS ── */
-        .filter-bar {
+        /* ── FILTER SECTION — two rows ── */
+        .filter-section {
             display: flex;
-            align-items: center;
-            gap: 8px;
+            flex-direction: column;
+            gap: 10px;
             margin-bottom: 16px;
             animation: fadeUp 0.4s 0.06s ease both;
         }
+        .filter-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .filter-row-label {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.7px;
+            color: var(--muted);
+            min-width: 52px;
+        }
+
         .filter-tab {
             display: flex;
             align-items: center;
@@ -152,11 +167,36 @@
             color: #ccc;
             background: var(--surface2);
         }
-        .filter-tab.active {
+
+        /* Date tabs active = red */
+        .filter-tab.date-tab.active {
             background: linear-gradient(135deg, var(--red), var(--red-dim));
             border-color: var(--red);
             color: #fff;
             box-shadow: 0 4px 14px var(--red-glow);
+        }
+
+        /* All types tab active = neutral white */
+        .filter-tab.tab-all.active {
+            background: var(--surface2);
+            border-color: rgba(255,255,255,0.18);
+            color: #ccc;
+        }
+
+        /* One Day tab active = blue */
+        .filter-tab.tab-oneday.active {
+            background: linear-gradient(135deg, #0078d4, #005a9e);
+            border-color: #0078d4;
+            color: #fff;
+            box-shadow: 0 4px 14px rgba(0,120,212,0.28);
+        }
+
+        /* Monthly tab active = purple */
+        .filter-tab.tab-monthly.active {
+            background: linear-gradient(135deg, #7c3aed, #5b21b6);
+            border-color: #7c3aed;
+            color: #fff;
+            box-shadow: 0 4px 14px rgba(124,58,237,0.28);
         }
 
         /* count chip inside filter tab */
@@ -277,6 +317,27 @@
         }
         .date-chip i, .time-chip i { color: #444; font-size: 11px; }
 
+        /* Membership type badge */
+        .type-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.4px;
+            margin-right: 6px;
+        }
+        .type-oneday {
+            background: rgba(0,120,212,0.12);
+            color: #3b9eff;
+            border: 1px solid rgba(0,120,212,0.25);
+        }
+        .type-monthly {
+            background: rgba(124,58,237,0.12);
+            color: #a78bfa;
+            border: 1px solid rgba(124,58,237,0.25);
+        }
+
         /* Status badges */
         .status-badge {
             display: inline-block;
@@ -365,23 +426,57 @@
 </div>
 <% } %>
 
-<!-- FILTER TABS -->
-<div class="filter-bar">
-    <div class="filter-tab active" id="tab-today" onclick="setFilter('today')">
-        <i class="fa-solid fa-calendar-day"></i>
-        Today
-        <span class="tab-count" id="count-today">0</span>
+<!-- ═══════════════════════════════════════
+     FILTER SECTION
+     Row 1 : Date   — Today / 7 Days / 30 Days
+     Row 2 : Type   — All / One Day / Monthly
+     ═══════════════════════════════════════ -->
+<div class="filter-section">
+
+    <!-- Row 1 : Date -->
+    <div class="filter-row">
+        <span class="filter-row-label">
+            <i class="fa-solid fa-calendar-day" style="margin-right:4px;"></i>Date
+        </span>
+        <div class="filter-tab date-tab active" id="tab-today" onclick="setDateFilter('today')">
+            <i class="fa-solid fa-calendar-day"></i>
+            Today
+            <span class="tab-count" id="count-today">0</span>
+        </div>
+        <div class="filter-tab date-tab" id="tab-7days" onclick="setDateFilter('7days')">
+            <i class="fa-solid fa-calendar-week"></i>
+            Last 7 Days
+            <span class="tab-count" id="count-7days">0</span>
+        </div>
+        <div class="filter-tab date-tab" id="tab-30days" onclick="setDateFilter('30days')">
+            <i class="fa-solid fa-calendar"></i>
+            Last 30 Days
+            <span class="tab-count" id="count-30days">0</span>
+        </div>
     </div>
-    <div class="filter-tab" id="tab-7days" onclick="setFilter('7days')">
-        <i class="fa-solid fa-calendar-week"></i>
-        Last 7 Days
-        <span class="tab-count" id="count-7days">0</span>
+
+    <!-- Row 2 : Membership type -->
+    <div class="filter-row">
+        <span class="filter-row-label">
+            <i class="fa-solid fa-id-card" style="margin-right:4px;"></i>Type
+        </span>
+        <div class="filter-tab tab-all active" id="tab-all" onclick="setTypeFilter('all')">
+            <i class="fa-solid fa-users"></i>
+            All Members
+            <span class="tab-count" id="count-all">0</span>
+        </div>
+        <div class="filter-tab tab-oneday" id="tab-oneday" onclick="setTypeFilter('oneday')">
+            <i class="fa-solid fa-bolt"></i>
+            One Day
+            <span class="tab-count" id="count-oneday">0</span>
+        </div>
+        <div class="filter-tab tab-monthly" id="tab-monthly" onclick="setTypeFilter('monthly')">
+            <i class="fa-solid fa-calendar-check"></i>
+            Monthly
+            <span class="tab-count" id="count-monthly">0</span>
+        </div>
     </div>
-    <div class="filter-tab" id="tab-30days" onclick="setFilter('30days')">
-        <i class="fa-solid fa-calendar"></i>
-        Last 30 Days
-        <span class="tab-count" id="count-30days">0</span>
-    </div>
+
 </div>
 
 <%-- ATTENDANCE TABLE --%>
@@ -442,21 +537,20 @@
                     continue;
                 }
 
-                String daysLeft = log.get("daysLeft");
-                String cssClass = "badge-active";
-                String icon     = "fa-circle-check";
+                String daysLeft   = log.get("daysLeft");
+                String cssClass   = "badge-active";
+                String icon       = "fa-circle-check";
                 String badgeLabel = daysLeft;
 
                 if (daysLeft != null && daysLeft.startsWith("Expired")) {
                     cssClass = "badge-expired";
                     icon     = "fa-circle-xmark";
-                    // Extract expired days count if available (e.g. "Expired -5 days" → "Expired 5 days ago")
                     try {
                         String numPart = daysLeft.replaceAll("[^0-9\\-]", "").trim();
                         int expDays = Math.abs(Integer.parseInt(numPart));
                         badgeLabel = "Expired " + expDays + " day" + (expDays == 1 ? "" : "s") + " ago";
                     } catch (Exception ex) {
-                        badgeLabel = daysLeft; // fallback to original
+                        badgeLabel = daysLeft;
                     }
                 } else if (daysLeft != null && !"-".equals(daysLeft)) {
                     try {
@@ -466,30 +560,43 @@
                     } catch (Exception ignored) {}
                 }
 
-                // Extract just the date part (yyyy-MM-dd) for JS filtering
-                String logDate = log.get("date"); // expected format: yyyy-MM-dd
+                // 🔥 membership type
+                String logMonthsStr = log.get("months");
+                int logMonths = 0;
+                try { logMonths = Integer.parseInt(logMonthsStr); } catch (Exception ignored) {}
+
+                String typeClass = (logMonths == 1) ? "type-oneday" : "type-monthly";
+                String typeLabel = (logMonths == 1) ? "One Day"
+                        : (logMonths > 1  ? logMonths + " Month" + (logMonths > 1 ? "s" : "") : "-");
+
+                String logDate = log.get("date");
             %>
-            <tr data-date="<%= logDate %>">
+            <tr data-date="<%= logDate %>" data-months="<%= logMonths %>">
                 <td><span class="row-num"><%= i++ %></span></td>
                 <td><span class="adm-no"><%= logAdmission %></span></td>
-                <td><span class="member-name"><%= logName %></span></td>
                 <td>
-            <span class="date-chip">
-              <i class="fa-regular fa-calendar"></i>
-              <%= log.get("date") %>
-            </span>
+                    <% if (logMonths > 0) { %>
+                    <span class="type-badge <%= typeClass %>"><%= typeLabel %></span>
+                    <% } %>
+                    <span class="member-name"><%= logName %></span>
                 </td>
                 <td>
-            <span class="time-chip">
-              <i class="fa-regular fa-clock"></i>
-              <%= log.get("time") %>
-            </span>
+                    <span class="date-chip">
+                        <i class="fa-regular fa-calendar"></i>
+                        <%= log.get("date") %>
+                    </span>
                 </td>
                 <td>
-            <span class="status-badge <%= cssClass %>">
-              <i class="fa-solid <%= icon %>" style="margin-right:5px; font-size:11px;"></i>
-              <%= badgeLabel %>
-            </span>
+                    <span class="time-chip">
+                        <i class="fa-regular fa-clock"></i>
+                        <%= log.get("time") %>
+                    </span>
+                </td>
+                <td>
+                    <span class="status-badge <%= cssClass %>">
+                        <i class="fa-solid <%= icon %>" style="margin-right:5px; font-size:11px;"></i>
+                        <%= badgeLabel %>
+                    </span>
                 </td>
             </tr>
             <% } %>
@@ -505,60 +612,72 @@
 </div>
 
 <script>
-    // ── DATE FILTER ──────────────────────────────────────────────────────────
-    let currentFilter = 'today';
+    // ── TWO INDEPENDENT FILTERS — combined with AND ───────────────────────────
+    let currentDate = 'today';   // today | 7days | 30days
+    let currentType = 'all';     // all   | oneday | monthly
 
     function getTodayStr() {
         const d = new Date();
-        const yyyy = d.getFullYear();
-        const mm   = String(d.getMonth() + 1).padStart(2, '0');
-        const dd   = String(d.getDate()).padStart(2, '0');
-        return yyyy + '-' + mm + '-' + dd;
+        return d.getFullYear() + '-' +
+            String(d.getMonth() + 1).padStart(2, '0') + '-' +
+            String(d.getDate()).padStart(2, '0');
     }
 
     function getCutoffStr(daysBack) {
         const d = new Date();
         d.setDate(d.getDate() - daysBack);
-        const yyyy = d.getFullYear();
-        const mm   = String(d.getMonth() + 1).padStart(2, '0');
-        const dd   = String(d.getDate()).padStart(2, '0');
-        return yyyy + '-' + mm + '-' + dd;
+        return d.getFullYear() + '-' +
+            String(d.getMonth() + 1).padStart(2, '0') + '-' +
+            String(d.getDate()).padStart(2, '0');
     }
 
-    function setFilter(filter) {
-        currentFilter = filter;
-
-        // update active tab
-        document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+    // ── Date row setter ───────────────────────────────────────────────────────
+    function setDateFilter(filter) {
+        currentDate = filter;
+        document.querySelectorAll('.date-tab').forEach(t => t.classList.remove('active'));
         document.getElementById('tab-' + filter).classList.add('active');
-
+        updateTabCounts();
         applyFilter();
     }
 
+    // ── Type row setter ───────────────────────────────────────────────────────
+    function setTypeFilter(type) {
+        currentType = type;
+        document.querySelectorAll('.tab-all, .tab-oneday, .tab-monthly')
+            .forEach(t => t.classList.remove('active'));
+        document.getElementById('tab-' + type).classList.add('active');
+        applyFilter();
+    }
+
+    // ── Apply both filters (AND logic) ────────────────────────────────────────
     function applyFilter() {
         const tbody = document.getElementById('attendanceTable');
         if (!tbody) return;
 
-        const today    = getTodayStr();
-        const cut7     = getCutoffStr(6);   // today + 6 days back = 7-day window
-        const cut30    = getCutoffStr(29);  // today + 29 days back = 30-day window
+        const today = getTodayStr();
+        const cut7  = getCutoffStr(6);
+        const cut30 = getCutoffStr(29);
 
         const rows = tbody.querySelectorAll('tr[data-date]');
-
         let visible = 0;
 
         rows.forEach(row => {
-            const rowDate = row.getAttribute('data-date'); // yyyy-MM-dd
+            const rowDate   = row.getAttribute('data-date');
+            const rowMonths = parseInt(row.getAttribute('data-months') || '0', 10);
 
-            let show = false;
+            // Date check
+            let dateOk = false;
+            if      (currentDate === 'today')   dateOk = (rowDate === today);
+            else if (currentDate === '7days')   dateOk = (rowDate >= cut7  && rowDate <= today);
+            else if (currentDate === '30days')  dateOk = (rowDate >= cut30 && rowDate <= today);
 
-            if (currentFilter === 'today') {
-                show = (rowDate === today);
-            } else if (currentFilter === '7days') {
-                show = (rowDate >= cut7 && rowDate <= today);
-            } else if (currentFilter === '30days') {
-                show = (rowDate >= cut30 && rowDate <= today);
-            }
+            // Type check
+            let typeOk = false;
+            if      (currentType === 'all')     typeOk = true;
+            else if (currentType === 'oneday')  typeOk = (rowMonths === 1);
+            else if (currentType === 'monthly') typeOk = (rowMonths > 1);
+
+            const show = dateOk && typeOk;
 
             if (show) {
                 row.classList.remove('filtered-hidden');
@@ -568,11 +687,10 @@
             }
         });
 
-        // update visible counter
         const counter = document.getElementById('visibleCount');
         if (counter) counter.textContent = visible;
 
-        // renumber visible rows
+        // Renumber visible rows
         let num = 1;
         rows.forEach(row => {
             if (!row.classList.contains('filtered-hidden')) {
@@ -582,37 +700,59 @@
         });
     }
 
+    // ── Update tab counts ─────────────────────────────────────────────────────
+    // Date row  → always shows total for that range (type-agnostic)
+    // Type row  → counts within the CURRENT date window only
     function updateTabCounts() {
         const tbody = document.getElementById('attendanceTable');
         if (!tbody) return;
 
-        const today  = getTodayStr();
-        const cut7   = getCutoffStr(6);
-        const cut30  = getCutoffStr(29);
+        const today = getTodayStr();
+        const cut7  = getCutoffStr(6);
+        const cut30 = getCutoffStr(29);
 
         let cToday = 0, c7 = 0, c30 = 0;
+        let cAll = 0, cOneDay = 0, cMonthly = 0;
 
         tbody.querySelectorAll('tr[data-date]').forEach(row => {
-            const rowDate = row.getAttribute('data-date');
-            if (rowDate === today) cToday++;
+            const rowDate   = row.getAttribute('data-date');
+            const rowMonths = parseInt(row.getAttribute('data-months') || '0', 10);
+
+            // Date row counts (independent of type)
+            if (rowDate === today)                    cToday++;
             if (rowDate >= cut7  && rowDate <= today) c7++;
             if (rowDate >= cut30 && rowDate <= today) c30++;
+
+            // Type row counts — scoped to current date window
+            let inWindow = false;
+            if      (currentDate === 'today')  inWindow = (rowDate === today);
+            else if (currentDate === '7days')  inWindow = (rowDate >= cut7  && rowDate <= today);
+            else if (currentDate === '30days') inWindow = (rowDate >= cut30 && rowDate <= today);
+
+            if (inWindow) {
+                cAll++;
+                if (rowMonths === 1) cOneDay++;
+                if (rowMonths > 1)   cMonthly++;
+            }
         });
 
-        document.getElementById('count-today').textContent  = cToday;
-        document.getElementById('count-7days').textContent  = c7;
-        document.getElementById('count-30days').textContent = c30;
+        document.getElementById('count-today').textContent   = cToday;
+        document.getElementById('count-7days').textContent   = c7;
+        document.getElementById('count-30days').textContent  = c30;
+        document.getElementById('count-all').textContent     = cAll;
+        document.getElementById('count-oneday').textContent  = cOneDay;
+        document.getElementById('count-monthly').textContent = cMonthly;
     }
 
-    // ── LIVE REFRESH ─────────────────────────────────────────────────────────
+    // ── LIVE REFRESH every 5s ─────────────────────────────────────────────────
     function loadAttendance() {
         fetch('fingerprint-data?page=logs')
             .then(res => res.text())
             .then(html => {
-                const parser   = new DOMParser();
-                const doc      = parser.parseFromString(html, 'text/html');
-                const newTbody  = doc.querySelector("#attendanceTable");
-                const currTbody = document.querySelector("#attendanceTable");
+                const parser    = new DOMParser();
+                const doc       = parser.parseFromString(html, 'text/html');
+                const newTbody  = doc.querySelector('#attendanceTable');
+                const currTbody = document.querySelector('#attendanceTable');
                 if (newTbody && currTbody) {
                     currTbody.innerHTML = newTbody.innerHTML;
                     updateTabCounts();
@@ -621,10 +761,9 @@
             });
     }
 
-    // Init on page load
+    // Init
     updateTabCounts();
     applyFilter();
-
     setInterval(loadAttendance, 5000);
 </script>
 

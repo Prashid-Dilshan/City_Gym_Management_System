@@ -2,6 +2,10 @@
 
     var KEY = 'att_last_seen';
 
+    // ── POPUP QUEUE (stack from bottom) ──────────────────────────────────────
+    var popupQueue = []; // array of DOM elements currently visible
+    var POPUP_HEIGHT = 210; // approx height + gap per popup (px)
+
     function getLastSeen() {
         var v = sessionStorage.getItem(KEY);
         if (!v) {
@@ -19,7 +23,39 @@
         return p.length > 1 ? '/' + p[1] : '';
     }
 
-    // ── POLL EVERY 5s ──
+    // ── PLAY NOTIFICATION SOUND ───────────────────────────────────────────────
+    function playSound() {
+        try {
+            var audio = new Audio(base() + '/tone/notification_tone.wav');
+            audio.volume = 1.0;
+            audio.play().catch(function () {});
+        } catch (e) {}
+    }
+
+    // ── REPOSITION ALL POPUPS (bottom → top stack) ───────────────────────────
+    function repositionAll() {
+        var bottomOffset = 28;
+        for (var i = 0; i < popupQueue.length; i++) {
+            popupQueue[i].style.bottom = bottomOffset + 'px';
+            bottomOffset += popupQueue[i].offsetHeight + 10;
+        }
+    }
+
+    // ── REMOVE POPUP FROM QUEUE ───────────────────────────────────────────────
+    function removePopup(el) {
+        el.style.transition = 'opacity .35s, transform .35s';
+        el.style.opacity    = '0';
+        el.style.transform  = 'translateX(120%)';
+
+        setTimeout(function () {
+            if (el.parentNode) el.parentNode.removeChild(el);
+            var idx = popupQueue.indexOf(el);
+            if (idx > -1) popupQueue.splice(idx, 1);
+            repositionAll();
+        }, 360);
+    }
+
+    // ── POLL EVERY 5s ────────────────────────────────────────────────────────
     function poll() {
         var lastSeen = getLastSeen();
         fetch(base() + '/attendance-stream?lastSeen=' + lastSeen, { cache: 'no-store' })
@@ -27,6 +63,7 @@
             .then(function (data) {
                 if (data.found) {
                     setLastSeen(data.ts);
+                    playSound();
                     showPopup(data);
                 }
             })
@@ -34,36 +71,54 @@
             .finally(function () { setTimeout(poll, 5000); });
     }
 
-    // ── POPUP ──
+    // ── BUILD POPUP ───────────────────────────────────────────────────────────
     function showPopup(data) {
-        var old = document.getElementById('att-popup');
-        if (old) old.remove();
 
-        var expired = data.daysLeft === 'Expired';
+        var expired = data.daysLeft === 'Expired' || (data.daysLeft && data.daysLeft.toString().startsWith('Expired'));
         var warn    = !expired && !isNaN(parseInt(data.daysLeft)) && parseInt(data.daysLeft) <= 7;
 
         var accentColor = expired ? '#e8000d' : warn ? '#ff5500' : '#e8000d';
         var badgeText   = expired ? 'MEMBERSHIP EXPIRED' : warn ? 'EXPIRING SOON' : 'ACTIVE';
-        var statusColor = expired ? '#e8000d' : warn ? '#ff5500' : '#ffffff';
+        var statusColor = expired ? '#e8000d' : warn ? '#ff5500' : '#00c860';
+
+        // Format daysLeft label
+        var daysLabel = data.daysLeft;
+        if (expired) {
+            try {
+                var numPart = String(data.daysLeft).replace(/[^0-9\-]/g, '').trim();
+                var expDays = Math.abs(parseInt(numPart));
+                if (!isNaN(expDays) && expDays > 0) {
+                    daysLabel = 'Expired ' + expDays + ' day' + (expDays === 1 ? '' : 's') + ' ago';
+                } else {
+                    daysLabel = 'Expired';
+                }
+            } catch (e) { daysLabel = data.daysLeft; }
+        } else if (!isNaN(parseInt(data.daysLeft))) {
+            var d = parseInt(data.daysLeft);
+            daysLabel = d + ' day' + (d === 1 ? '' : 's') + ' left';
+        }
 
         var el = document.createElement('div');
-        el.id = 'att-popup';
+        el.setAttribute('data-fid', data.fid || '');
+
         el.style.cssText =
-            'position:fixed;bottom:28px;right:28px;width:310px;' +
+            'position:fixed;right:28px;bottom:28px;width:310px;' +
             'background:#0d0d0d;' +
             'border-radius:16px;' +
             'border:1.5px solid ' + accentColor + ';' +
             'box-shadow:0 20px 60px rgba(0,0,0,0.8),0 0 40px rgba(232,0,13,0.3);' +
             'font-family:"Outfit",Arial,sans-serif;' +
             'z-index:2147483647;overflow:hidden;' +
+            'cursor:pointer;' +
+            'transition:bottom .3s cubic-bezier(.22,.68,0,1.2);' +
             'animation:attIn .45s cubic-bezier(.22,.68,0,1.2);';
 
         el.innerHTML =
 
-            // ── TOP GLOW LINE ──
+            // TOP GLOW LINE
             '<div style="height:3px;background:linear-gradient(90deg,transparent,' + accentColor + ',transparent);"></div>' +
 
-            // ── HEADER ──
+            // HEADER
             '<div style="' +
             'background:#e8000d;' +
             'padding:13px 16px;' +
@@ -78,17 +133,17 @@
             '">👆</div>' +
             '<span style="color:#fff;font-weight:700;font-size:13px;letter-spacing:.5px;">NEW ATTENDANCE</span>' +
             '</div>' +
-            '<div id="att-x" style="' +
+            '<div class="att-close-btn" style="' +
             'width:24px;height:24px;border-radius:6px;' +
             'background:rgba(0,0,0,0.30);' +
             'display:flex;align-items:center;justify-content:center;' +
             'color:#fff;cursor:pointer;font-size:14px;font-weight:bold;' +
-            'transition:background .2s;' +
+            'transition:background .2s;flex-shrink:0;' +
             '" onmouseover="this.style.background=\'rgba(0,0,0,0.55)\'" ' +
             'onmouseout="this.style.background=\'rgba(0,0,0,0.30)\'">&#x2715;</div>' +
             '</div>' +
 
-            // ── BODY ──
+            // BODY
             '<div style="padding:16px 16px 14px;background:#111;">' +
 
             // Name row
@@ -103,11 +158,11 @@
             '">👤</div>' +
             '<div>' +
             '<div style="font-size:15px;font-weight:700;color:#fff;letter-spacing:.3px;">' + esc(data.name) + '</div>' +
-            '<div style="font-size:11px;color:#555;margin-top:2px;">City Gym Hambantota</div>' +
+            '<div style="font-size:11px;color:#555;margin-top:2px;">City Gym Hambantota — tap to view profile</div>' +
             '</div>' +
             '</div>' +
 
-            // Info boxes
+            // Info grid
             '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">' +
 
             '<div style="background:#1a1a1a;border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:10px 12px;">' +
@@ -129,8 +184,8 @@
             'display:flex;justify-content:space-between;align-items:center;' +
             '">' +
             '<span style="font-size:12px;color:#888;">Membership Remaining</span>' +
-            '<span style="color:' + statusColor + ';font-weight:800;font-size:16px;' +
-            'font-family:\'Bebas Neue\',sans-serif;letter-spacing:1px;">' + esc(data.daysLeft) + '</span>' +
+            '<span style="color:' + statusColor + ';font-weight:800;font-size:15px;' +
+            'font-family:\'Bebas Neue\',sans-serif;letter-spacing:1px;">' + esc(daysLabel) + '</span>' +
             '</div>' +
 
             // Badge
@@ -144,44 +199,41 @@
 
             '</div>' +
 
-            // ── TIMER BAR ──
-            '<div style="height:3px;background:#222;">' +
-            '<div id="att-bar" style="height:100%;width:100%;background:#e8000d;transition:width 8s linear;"></div>' +
-            '</div>';
+            // BOTTOM GLOW LINE (no timer bar — no auto close)
+            '<div style="height:3px;background:linear-gradient(90deg,transparent,' + accentColor + ',transparent);opacity:0.4;"></div>';
 
         document.body.appendChild(el);
 
-        document.getElementById('att-x').onclick = function () { el.remove(); };
+        // Push to queue and reposition all
+        popupQueue.push(el);
+        repositionAll();
 
-        requestAnimationFrame(function () {
-            requestAnimationFrame(function () {
-                var b = document.getElementById('att-bar');
-                if (b) b.style.width = '0%';
+        // ── CLOSE BUTTON (stop propagation so it doesn't trigger profile open) ──
+        var closeBtn = el.querySelector('.att-close-btn');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', function (e) {
+                e.stopPropagation();
+                removePopup(el);
             });
-        });
+        }
 
-        setTimeout(function () {
-            var p = document.getElementById('att-popup');
-            if (p) {
-                p.style.transition = 'opacity .4s,transform .4s';
-                p.style.opacity = '0';
-                p.style.transform = 'translateX(120%)';
-                setTimeout(function () {
-                    var p2 = document.getElementById('att-popup');
-                    if (p2) p2.remove();
-                }, 420);
+        // ── CLICK POPUP BODY → GO TO MEMBER PROFILE ──
+        el.addEventListener('click', function () {
+            var fid = el.getAttribute('data-fid');
+            if (fid) {
+                window.location.href = base() + '/view-member?fid=' + encodeURIComponent(fid);
             }
-        }, 150000);
+        });
     }
 
     function esc(s) {
         return s ? String(s)
-            .replace(/&/g,'&amp;')
-            .replace(/</g,'&lt;')
-            .replace(/>/g,'&gt;') : '';
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;') : '';
     }
 
-    // ── FONTS + KEYFRAMES ──
+    // ── FONTS + KEYFRAMES ────────────────────────────────────────────────────
     var st = document.createElement('style');
     st.textContent =
         '@import url("https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@400;600;700;800&display=swap");' +

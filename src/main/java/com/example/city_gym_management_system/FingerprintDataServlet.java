@@ -18,6 +18,8 @@ public class FingerprintDataServlet extends HttpServlet {
     private static final Map<String, String> dbUserMap      = new HashMap<>();
     private static final Map<String, String> dbAdmissionMap = new HashMap<>();
     private static final Map<String, String> dbDaysLeftMap  = new HashMap<>();
+    // 🔥 NEW: months map for membership type filter
+    private static final Map<String, String> dbMonthsMap    = new HashMap<>();
 
     static {
         try {
@@ -40,7 +42,9 @@ public class FingerprintDataServlet extends HttpServlet {
 
         try {
             try (Connection con = DatabaseUtil.getConnection()) {
-                String sql = "SELECT md.fingerprint_id, md.full_name, md.admission_no, ms.end_date " +
+                // 🔥 UPDATED: added ms.months to the query
+                String sql = "SELECT md.fingerprint_id, md.full_name, md.admission_no, " +
+                        "ms.end_date, ms.months " +
                         "FROM member_details md " +
                         "LEFT JOIN membership_details ms ON md.id = ms.member_id";
 
@@ -49,16 +53,19 @@ public class FingerprintDataServlet extends HttpServlet {
                     dbUserMap.clear();
                     dbAdmissionMap.clear();
                     dbDaysLeftMap.clear();
+                    dbMonthsMap.clear(); // 🔥 NEW
 
                     while (rs.next()) {
                         String fid     = rs.getString("fingerprint_id");
                         String name    = rs.getString("full_name");
                         String admNo   = rs.getString("admission_no");
                         String endDate = rs.getString("end_date");
+                        int    months  = rs.getInt("months"); // 🔥 NEW
 
                         savedMembers.add(fid);
                         dbUserMap.put(fid, name);
                         dbAdmissionMap.put(fid, admNo != null ? admNo : "-");
+                        dbMonthsMap.put(fid, String.valueOf(months)); // 🔥 NEW
 
                         if (endDate != null) {
                             try {
@@ -188,6 +195,7 @@ public class FingerprintDataServlet extends HttpServlet {
                 String name      = dbUserMap.getOrDefault(id, userMap.getOrDefault(id, "Unknown"));
                 String admission = dbAdmissionMap.getOrDefault(id, "-");
                 String daysLeft  = dbDaysLeftMap.getOrDefault(id, "-");
+                String months    = dbMonthsMap.getOrDefault(id, "0"); // 🔥 NEW
 
                 String date     = String.format("%04d-%02d-%02d", parseInt(year), parseInt(month), parseInt(day));
                 String time     = String.format("%02d:%02d:%02d", parseInt(hour), parseInt(minute), parseInt(second));
@@ -206,6 +214,7 @@ public class FingerprintDataServlet extends HttpServlet {
                 entry.put("date",      date);
                 entry.put("time",      time);
                 entry.put("daysLeft",  daysLeft);
+                entry.put("months",    months); // 🔥 NEW
 
                 attendanceLogs.add(entry);
             }
