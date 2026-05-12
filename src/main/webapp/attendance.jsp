@@ -565,9 +565,11 @@
                 int logMonths = 0;
                 try { logMonths = Integer.parseInt(logMonthsStr); } catch (Exception ignored) {}
 
-                String typeClass = (logMonths == 1) ? "type-oneday" : "type-monthly";
-                String typeLabel = (logMonths == 1) ? "One Day"
-                        : (logMonths > 1  ? logMonths + " Month" + (logMonths > 1 ? "s" : "") : "-");
+                String typeClass = (logMonths == 0) ? "type-oneday" : "type-monthly";
+
+                String typeLabel = (logMonths == 0)
+                        ? "One Day"
+                        : logMonths + " Month" + (logMonths == 1 ? "" : "s");
 
                 String logDate = log.get("date");
             %>
@@ -674,8 +676,8 @@
             // Type check
             let typeOk = false;
             if      (currentType === 'all')     typeOk = true;
-            else if (currentType === 'oneday')  typeOk = (rowMonths === 1);
-            else if (currentType === 'monthly') typeOk = (rowMonths > 1);
+            else if (currentType === 'oneday')  typeOk = (rowMonths === 0);
+            else if (currentType === 'monthly') typeOk = (rowMonths > 0);
 
             const show = dateOk && typeOk;
 
@@ -731,8 +733,8 @@
 
             if (inWindow) {
                 cAll++;
-                if (rowMonths === 1) cOneDay++;
-                if (rowMonths > 1)   cMonthly++;
+                if (rowMonths === 0) cOneDay++;
+                if (rowMonths > 0)   cMonthly++;
             }
         });
 
