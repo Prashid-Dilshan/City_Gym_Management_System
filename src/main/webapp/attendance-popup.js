@@ -201,7 +201,9 @@
 
         document.body.appendChild(el);
         popupQueue.push(el);
-        repositionAll();
+        setTimeout(function () {
+            repositionAll();
+        }, 50);
 
         // ── Close button ─────────────────────────────────────────────────────
         var closeBtn = el.querySelector('.att-close-btn');

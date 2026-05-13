@@ -28,31 +28,26 @@
 
   try (Connection con = DatabaseUtil.getConnection()) {
 
-    // Today attendance (distinct fingerprints)
     String q1 = "SELECT COUNT(DISTINCT fingerprint_id) FROM attendance_log WHERE DATE(scan_time) = CURDATE()";
     try (PreparedStatement ps = con.prepareStatement(q1); ResultSet rs = ps.executeQuery()) {
       if (rs.next()) todayCount = rs.getInt(1);
     }
 
-    // Total members
     String q2 = "SELECT COUNT(*) FROM member_details";
     try (PreparedStatement ps = con.prepareStatement(q2); ResultSet rs = ps.executeQuery()) {
       if (rs.next()) totalMembers = rs.getInt(1);
     }
 
-    // Active memberships (end_date >= today)
     String q3 = "SELECT COUNT(*) FROM membership_details WHERE end_date >= CURDATE()";
     try (PreparedStatement ps = con.prepareStatement(q3); ResultSet rs = ps.executeQuery()) {
       if (rs.next()) activeMemberships = rs.getInt(1);
     }
 
-    // Ended / Expired memberships
     String q4 = "SELECT COUNT(*) FROM membership_details WHERE end_date < CURDATE()";
     try (PreparedStatement ps = con.prepareStatement(q4); ResultSet rs = ps.executeQuery()) {
       if (rs.next()) endedMemberships = rs.getInt(1);
     }
 
-    // Weekly average attendance
     String q5 = "SELECT AVG(daily_count) FROM " +
             "(SELECT COUNT(*) as daily_count FROM attendance_log " +
             "WHERE scan_time >= CURDATE() - INTERVAL 7 DAY " +
@@ -61,7 +56,6 @@
       if (rs.next()) weeklyAvg = rs.getDouble(1);
     }
 
-    // Last 7 days chart
     String q6 = "SELECT DATE(scan_time) as day, COUNT(*) as total " +
             "FROM attendance_log WHERE scan_time >= CURDATE() - INTERVAL 7 DAY " +
             "GROUP BY DATE(scan_time) ORDER BY day ASC";
@@ -70,7 +64,6 @@
       while (rs.next() && i < 7) { days7[i] = rs.getString("day"); counts7[i] = rs.getInt("total"); i++; }
     }
 
-    // Last 30 days chart
     String q7 = "SELECT DATE(scan_time) as day, COUNT(*) as total " +
             "FROM attendance_log WHERE scan_time >= CURDATE() - INTERVAL 30 DAY " +
             "GROUP BY DATE(scan_time) ORDER BY day ASC";
@@ -79,22 +72,18 @@
       while (rs.next() && i < 30) { days30[i] = rs.getString("day"); counts30[i] = rs.getInt("total"); i++; }
     }
 
-    // ── REVENUE from membership_details ──
-    // Today: membership fee + registration fee where start_date = today
     String qR1 = "SELECT COALESCE(SUM(amount + registration_fee), 0) " +
             "FROM membership_details WHERE DATE(start_date) = CURDATE()";
     try (PreparedStatement ps = con.prepareStatement(qR1); ResultSet rs = ps.executeQuery()) {
       if (rs.next()) revToday = rs.getDouble(1);
     }
 
-    // Last 7 days
     String qR2 = "SELECT COALESCE(SUM(amount + registration_fee), 0) " +
             "FROM membership_details WHERE start_date >= CURDATE() - INTERVAL 7 DAY";
     try (PreparedStatement ps = con.prepareStatement(qR2); ResultSet rs = ps.executeQuery()) {
       if (rs.next()) rev7Days = rs.getDouble(1);
     }
 
-    // Last 30 days
     String qR3 = "SELECT COALESCE(SUM(amount + registration_fee), 0) " +
             "FROM membership_details WHERE start_date >= CURDATE() - INTERVAL 30 DAY";
     try (PreparedStatement ps = con.prepareStatement(qR3); ResultSet rs = ps.executeQuery()) {
@@ -111,7 +100,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Home – Dashboard</title>
-  <meta http-equiv="refresh" content="30">
+  <%-- 🔥 meta refresh REMOVED — live update via JS fetch instead --%>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -222,24 +211,9 @@
     .search-msg { padding: 20px; text-align: center; color: #444; font-size: 13px; }
 
     /* ── ROWS ── */
-    .row1 {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 14px;
-      margin-bottom: 14px;
-    }
-    .row2 {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 14px;
-      margin-bottom: 14px;
-    }
-    .row3 {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 14px;
-      margin-bottom: 18px;
-    }
+    .row1 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 14px; }
+    .row2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin-bottom: 14px; }
+    .row3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 18px; }
 
     /* ── STAT CARD ── */
     .stat-card {
@@ -254,9 +228,7 @@
       overflow: hidden;
       transition: border-color 0.22s, transform 0.22s;
     }
-    .stat-card:hover {
-      border-color: rgba(232,0,13,0.30);
-    }
+    .stat-card:hover { border-color: rgba(232,0,13,0.30); }
     .stat-card-link:hover {
       border-color: rgba(232,0,13,0.45);
       box-shadow: 0 0 0 1px rgba(232,0,13,0.15);
@@ -287,24 +259,9 @@
     .ic-teal   { background: linear-gradient(135deg, #00bcd4, #007b8a); box-shadow: 0 5px 16px rgba(0,188,212,0.22); }
     .ic-purple { background: linear-gradient(135deg, #8b00ff, #5500aa); box-shadow: 0 5px 16px rgba(139,0,255,0.22); }
 
-    .stat-label {
-      font-size: 11px;
-      color: #666;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin-bottom: 5px;
-    }
-    .stat-value {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 34px;
-      letter-spacing: 1px;
-      line-height: 1;
-    }
-    /* Revenue cards — smaller font so long Rs. values fit */
-    .stat-value.rev {
-      font-size: 26px;
-    }
+    .stat-label { font-size: 11px; color: #666; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px; }
+    .stat-value { font-family: 'Bebas Neue', sans-serif; font-size: 34px; letter-spacing: 1px; line-height: 1; }
+    .stat-value.rev { font-size: 26px; }
     .stat-sub { font-size: 11px; color: #444; margin-top: 4px; }
 
     .c-red    { color: var(--red); }
@@ -316,28 +273,12 @@
 
     /* ── REVENUE SECTION DIVIDER ── */
     .section-label-row {
-      display: flex;
-      align-items: center;
-      gap: 20px;
-      margin-bottom: 12px;
-      margin-top: 30px;
+      display: flex; align-items: center; gap: 20px;
+      margin-bottom: 12px; margin-top: 30px;
       animation: fadeUp 0.4s 0.10s ease both;
     }
-    .section-label-row span {
-      font-size: 11px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      color: #444;
-      white-space: nowrap;
-    }
-    .section-label-row::before,
-    .section-label-row::after {
-      content: '';
-      flex: 1;
-      height: 1px;
-      background: var(--border);
-    }
+    .section-label-row span { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #444; white-space: nowrap; }
+    .section-label-row::before, .section-label-row::after { content: ''; flex: 1; height: 1px; background: var(--border); }
 
     /* ── CHART CARD ── */
     .chart-card {
@@ -350,54 +291,33 @@
       animation: fadeUp 0.4s 0.18s ease both;
     }
     .chart-watermark {
-      position: absolute;
-      top: 50%; left: 50%;
+      position: absolute; top: 50%; left: 50%;
       transform: translate(-50%, -50%);
       width: 300px; height: 150px;
       background: url('img/logo.png') no-repeat center / contain;
-      opacity: 0.035;
-      pointer-events: none;
-      z-index: 0;
+      opacity: 0.035; pointer-events: none; z-index: 0;
     }
     .chart-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 18px;
-      position: relative; z-index: 1;
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 18px; position: relative; z-index: 1;
     }
-    .chart-title {
-      display: flex;
-      align-items: center;
-      gap: 9px;
-      font-size: 16px;
-      font-weight: 600;
-    }
+    .chart-title { display: flex; align-items: center; gap: 9px; font-size: 16px; font-weight: 600; }
     .chart-title i { color: var(--red); }
 
-    .period-toggle {
-      display: flex;
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      overflow: hidden;
-    }
-    .period-btn {
-      padding: 7px 16px;
-      font-family: 'Outfit', sans-serif;
-      font-size: 12px;
-      font-weight: 600;
-      color: #555;
-      background: transparent;
-      border: none;
-      cursor: pointer;
-      transition: 0.2s;
-      letter-spacing: 0.3px;
-    }
+    .period-toggle { display: flex; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+    .period-btn { padding: 7px 16px; font-family: 'Outfit', sans-serif; font-size: 12px; font-weight: 600; color: #555; background: transparent; border: none; cursor: pointer; transition: 0.2s; letter-spacing: 0.3px; }
     .period-btn.active { background: var(--red); color: #fff; }
     .period-btn:hover:not(.active) { color: #bbb; }
 
     .chart-wrap { position: relative; z-index: 1; height: 260px; }
+
+    /* 🔥 live update flash animation */
+    @keyframes flashUpdate {
+      0%   { opacity: 1; }
+      30%  { opacity: 0.4; }
+      100% { opacity: 1; }
+    }
+    .stat-updating { animation: flashUpdate 0.5s ease; }
 
     @keyframes fadeUp {
       from { opacity:0; transform:translateY(16px); }
@@ -405,14 +325,13 @@
     }
 
     @media (max-width: 800px) {
-      .row1 { grid-template-columns: 1fr 1fr; }
+      .row1, .row3 { grid-template-columns: 1fr 1fr; }
       .row2 { grid-template-columns: 1fr 1fr; }
-      .row3 { grid-template-columns: 1fr 1fr; }
     }
     @media (max-width: 480px) {
       body { padding: 12px; }
       .row1, .row2, .row3 { gap: 10px; }
-      .stat-value     { font-size: 28px; }
+      .stat-value { font-size: 28px; }
       .stat-value.rev { font-size: 22px; }
     }
   </style>
@@ -422,37 +341,30 @@
 <!-- ══ MEMBER SEARCH ══ -->
 <div class="search-wrapper" id="searchWrapper">
   <i class="fa-solid fa-magnifying-glass search-icon-left"></i>
-  <input
-          type="text"
-          id="memberSearchBox"
-          class="search-box"
-          placeholder="Search member by name or admission number..."
-          autocomplete="off"
-  >
+  <input type="text" id="memberSearchBox" class="search-box"
+         placeholder="Search member by name or admission number..." autocomplete="off">
   <button class="search-clear-btn" id="searchClearBtn" onclick="clearMemberSearch()">
     <i class="fa-solid fa-xmark"></i>
   </button>
 </div>
-<!-- Dropdown appended to body to escape all stacking contexts -->
 <div class="search-results-dropdown" id="memberSearchResults"></div>
 
-<!-- ══ ROW 1: Total Members | Today Attendance | Weekly Avg ══ -->
+<!-- ══ ROW 1 ══ -->
 <div class="row1">
-
   <div class="stat-card">
     <div class="stat-icon ic-blue"><i class="fa-solid fa-users"></i></div>
     <div>
       <div class="stat-label">Total Members</div>
-      <div class="stat-value c-white"><%= totalMembers %></div>
+      <div class="stat-value c-white" id="statTotalMembers"><%= totalMembers %></div>
       <div class="stat-sub">All registered</div>
     </div>
   </div>
 
-  <div class="stat-card stat-card-link" onclick="navigateTo('attendance.jsp')" style="cursor:pointer;">
+  <div class="stat-card stat-card-link" onclick="navigateTo('fingerprint-data?page=logs')" style="cursor:pointer;">
     <div class="stat-icon ic-red"><i class="fa-solid fa-fingerprint"></i></div>
     <div>
       <div class="stat-label">Today Attendance</div>
-      <div class="stat-value c-red"><%= todayCount %></div>
+      <div class="stat-value c-red" id="statTodayCount"><%= todayCount %></div>
       <div class="stat-sub">Click to view &rarr;</div>
     </div>
   </div>
@@ -461,21 +373,19 @@
     <div class="stat-icon ic-orange"><i class="fa-solid fa-chart-line"></i></div>
     <div>
       <div class="stat-label">Weekly Avg Attendance</div>
-      <div class="stat-value c-white"><%= String.format("%.1f", weeklyAvg) %></div>
+      <div class="stat-value c-white" id="statWeeklyAvg"><%= String.format("%.1f", weeklyAvg) %></div>
       <div class="stat-sub">Per day / last 7 days</div>
     </div>
   </div>
-
 </div>
 
-<!-- ══ ROW 2: Active Memberships | Ended Memberships ══ -->
+<!-- ══ ROW 2 ══ -->
 <div class="row2">
-
   <div class="stat-card stat-card-link" onclick="navigateTo('active_memberships.jsp')" style="cursor:pointer;">
     <div class="stat-icon ic-green"><i class="fa-solid fa-id-card"></i></div>
     <div>
       <div class="stat-label">Active Memberships</div>
-      <div class="stat-value c-green"><%= activeMemberships %></div>
+      <div class="stat-value c-green" id="statActive"><%= activeMemberships %></div>
       <div class="stat-sub">Click to view &rarr;</div>
     </div>
   </div>
@@ -484,14 +394,13 @@
     <div class="stat-icon ic-gray"><i class="fa-solid fa-calendar-xmark"></i></div>
     <div>
       <div class="stat-label">Ended Memberships</div>
-      <div class="stat-value c-red"><%= endedMemberships %></div>
+      <div class="stat-value c-red" id="statEnded"><%= endedMemberships %></div>
       <div class="stat-sub">Click to view &rarr;</div>
     </div>
   </div>
-
 </div>
 
-<!-- ══ ROW 4: Chart ══ -->
+<!-- ══ CHART ══ -->
 <div class="chart-card">
   <div class="chart-watermark"></div>
   <div class="chart-header">
@@ -509,101 +418,71 @@
   </div>
 </div>
 
-<!-- ══ ROW 3: Revenue ══ -->
+<!-- ══ REVENUE ══ -->
 <div class="section-label-row">
   <span><i class="fa-solid fa-coins" style="color:#ffb300;margin-right:5px;"></i>Revenue Collected</span>
 </div>
 <div class="row3">
-
   <div class="stat-card">
     <div>
       <div class="stat-label">Today's Revenue</div>
-      <div class="stat-value rev c-gold">Rs. <%= String.format("%,.0f", revToday) %></div>
+      <div class="stat-value rev c-gold" id="statRevToday">Rs. <%= String.format("%,.0f", revToday) %></div>
       <div class="stat-sub">Membership + Reg. fee today</div>
     </div>
   </div>
-
   <div class="stat-card">
     <div>
       <div class="stat-label">Last 7 Days</div>
-      <div class="stat-value rev c-teal">Rs. <%= String.format("%,.0f", rev7Days) %></div>
+      <div class="stat-value rev c-teal" id="statRev7">Rs. <%= String.format("%,.0f", rev7Days) %></div>
       <div class="stat-sub">Weekly collections</div>
     </div>
   </div>
-
   <div class="stat-card">
     <div>
       <div class="stat-label">Last 30 Days</div>
-      <div class="stat-value rev c-purple">Rs. <%= String.format("%,.0f", rev30Days) %></div>
+      <div class="stat-value rev c-purple" id="statRev30">Rs. <%= String.format("%,.0f", rev30Days) %></div>
       <div class="stat-sub">Monthly collections</div>
     </div>
   </div>
-
 </div>
 
 <script>
-  const labels7 = [<% for(int i=0;i<7;i++){%>"<%= days7[i]!=null?days7[i]:"" %>",<%}%>];
-  const data7   = [<% for(int i=0;i<7;i++){%><%= counts7[i] %>,<%}%>];
+  // ══ CHART ══════════════════════════════════════════════════════════════
+  var labels7  = [<% for(int i=0;i<7;i++){%>"<%= days7[i]!=null?days7[i]:"" %>",<%}%>];
+  var data7    = [<% for(int i=0;i<7;i++){%><%= counts7[i] %>,<%}%>];
+  var labels30 = [<% for(int i=0;i<30;i++){%>"<%= days30[i]!=null?days30[i]:"" %>",<%}%>];
+  var data30   = [<% for(int i=0;i<30;i++){%><%= counts30[i] %>,<%}%>];
 
-  const labels30 = [<% for(int i=0;i<30;i++){%>"<%= days30[i]!=null?days30[i]:"" %>",<%}%>];
-  const data30   = [<% for(int i=0;i<30;i++){%><%= counts30[i] %>,<%}%>];
-
-  const ctx = document.getElementById('attendanceChart').getContext('2d');
+  var ctx = document.getElementById('attendanceChart').getContext('2d');
 
   function makeGrad() {
-    const g = ctx.createLinearGradient(0, 0, 0, 260);
+    var g = ctx.createLinearGradient(0, 0, 0, 260);
     g.addColorStop(0, 'rgba(232,0,13,0.88)');
     g.addColorStop(1, 'rgba(232,0,13,0.18)');
     return g;
   }
 
-  const chart = new Chart(ctx, {
+  var chart = new Chart(ctx, {
     type: 'bar',
     data: {
       labels: labels7,
-      datasets: [{
-        label: 'Attendance',
-        data: data7,
-        backgroundColor: makeGrad(),
-        borderWidth: 0,
-        borderRadius: 6,
-        borderSkipped: false,
-      }]
+      datasets: [{ label: 'Attendance', data: data7, backgroundColor: makeGrad(), borderWidth: 0, borderRadius: 6, borderSkipped: false }]
     },
     options: {
-      responsive: true,
-      maintainAspectRatio: false,
+      responsive: true, maintainAspectRatio: false,
       plugins: {
-        legend: {
-          position: 'top', align: 'end',
-          labels: { color:'#888', font:{ family:'Outfit', size:12 }, boxWidth:24, boxHeight:10 }
-        },
-        tooltip: {
-          backgroundColor: '#1a1a1a',
-          borderColor: 'rgba(232,0,13,0.4)', borderWidth: 1,
-          titleColor: '#fff', bodyColor: '#aaa',
-          titleFont: { family:'Outfit', weight:'600' },
-          bodyFont:  { family:'Outfit' },
-        }
+        legend: { position: 'top', align: 'end', labels: { color:'#888', font:{ family:'Outfit', size:12 }, boxWidth:24, boxHeight:10 } },
+        tooltip: { backgroundColor: '#1a1a1a', borderColor: 'rgba(232,0,13,0.4)', borderWidth: 1, titleColor: '#fff', bodyColor: '#aaa', titleFont: { family:'Outfit', weight:'600' }, bodyFont: { family:'Outfit' } }
       },
       scales: {
-        x: {
-          grid: { color:'rgba(255,255,255,0.04)' },
-          ticks: { color:'#666', font:{ family:'Outfit', size:11 }, maxRotation:40 },
-          border: { display:false }
-        },
-        y: {
-          beginAtZero: true,
-          grid: { color:'rgba(255,255,255,0.06)' },
-          ticks: { color:'#666', font:{ family:'Outfit', size:12 }, stepSize:1 },
-          border: { display:false }
-        }
+        x: { grid: { color:'rgba(255,255,255,0.04)' }, ticks: { color:'#666', font:{ family:'Outfit', size:11 }, maxRotation:40 }, border: { display:false } },
+        y: { beginAtZero: true, grid: { color:'rgba(255,255,255,0.06)' }, ticks: { color:'#666', font:{ family:'Outfit', size:12 }, stepSize:1 }, border: { display:false } }
       }
     }
   });
 
   function switchPeriod(days) {
-    const is7 = days === 7;
+    var is7 = days === 7;
     document.getElementById('btn7').classList.toggle('active', is7);
     document.getElementById('btn30').classList.toggle('active', !is7);
     chart.data.labels = is7 ? labels7 : labels30;
@@ -612,23 +491,89 @@
     chart.update();
   }
 
-  // ══ NAVIGATION HELPER ══
+  // ══ NAVIGATION ══════════════════════════════════════════════════════════
   function navigateTo(url) {
-    // Try parent iframe (sidebar layout)
     try {
       var frame = window.parent.document.getElementById('contentFrame');
       if (frame) { frame.src = url; return; }
     } catch(e) {}
-    // Fallback: direct navigation
     window.location.href = url;
   }
 
-  // ══ MEMBER SEARCH LOGIC ══
+  // ══════════════════════════════════════════════════════════════════════
+  // 🔥 LIVE STATS UPDATE — page reload නෑ, popup safe!
+  // Every 30s — fetch dashboard-stats endpoint, update values in-place
+  // ══════════════════════════════════════════════════════════════════════
+  function flashEl(id) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.classList.remove('stat-updating');
+    void el.offsetWidth; // reflow
+    el.classList.add('stat-updating');
+  }
+
+  function updateStats() {
+    fetch('dashboard-stats', { cache: 'no-store' })
+            .then(function(r) { return r.json(); })
+            .then(function(d) {
+              // Update stat values without touching the page
+              var map = {
+                'statTotalMembers': d.totalMembers,
+                'statTodayCount':   d.todayCount,
+                'statWeeklyAvg':    d.weeklyAvg,
+                'statActive':       d.activeMemberships,
+                'statEnded':        d.endedMemberships,
+                'statRevToday':     'Rs. ' + d.revToday,
+                'statRev7':         'Rs. ' + d.rev7Days,
+                'statRev30':        'Rs. ' + d.rev30Days
+              };
+
+              Object.keys(map).forEach(function(id) {
+                var el = document.getElementById(id);
+                if (!el) return;
+                var newVal = String(map[id]);
+                if (el.textContent.trim() !== newVal) {
+                  el.textContent = newVal;
+                  flashEl(id); // brief flash so user sees it updated
+                }
+              });
+
+              // Update chart data too
+              if (d.chartLabels7 && d.chartData7) {
+                labels7 = d.chartLabels7;
+                data7   = d.chartData7;
+                if (document.getElementById('btn7').classList.contains('active')) {
+                  chart.data.labels = labels7;
+                  chart.data.datasets[0].data = data7;
+                  chart.data.datasets[0].backgroundColor = makeGrad();
+                  chart.update('none'); // no animation for background updates
+                }
+              }
+              if (d.chartLabels30 && d.chartData30) {
+                labels30 = d.chartLabels30;
+                data30   = d.chartData30;
+                if (document.getElementById('btn30').classList.contains('active')) {
+                  chart.data.labels = labels30;
+                  chart.data.datasets[0].data = data30;
+                  chart.data.datasets[0].backgroundColor = makeGrad();
+                  chart.update('none');
+                }
+              }
+            })
+            .catch(function() {
+              // Silent fail — popup not affected
+            });
+  }
+
+  // Start live update every 30 seconds — no page reload
+  setInterval(updateStats, 30000);
+
+  // ══ MEMBER SEARCH ═══════════════════════════════════════════════════════
   (function () {
-    const box      = document.getElementById('memberSearchBox');
-    const dropdown = document.getElementById('memberSearchResults');
-    const clearBtn = document.getElementById('searchClearBtn');
-    let timer = null;
+    var box      = document.getElementById('memberSearchBox');
+    var dropdown = document.getElementById('memberSearchResults');
+    var clearBtn = document.getElementById('searchClearBtn');
+    var timer    = null;
 
     function positionDropdown() {
       var rect = box.getBoundingClientRect();
@@ -638,13 +583,10 @@
     }
 
     box.addEventListener('input', function () {
-      const q = this.value.trim();
+      var q = this.value.trim();
       clearBtn.style.display = q ? 'block' : 'none';
 
-      if (!q) {
-        dropdown.style.display = 'none';
-        return;
-      }
+      if (!q) { dropdown.style.display = 'none'; return; }
 
       positionDropdown();
       dropdown.style.display = 'block';
@@ -677,13 +619,8 @@
       }, 300);
     });
 
-    window.addEventListener('scroll', function() {
-      if (dropdown.style.display === 'block') positionDropdown();
-    }, true);
-
-    window.addEventListener('resize', function() {
-      if (dropdown.style.display === 'block') positionDropdown();
-    });
+    window.addEventListener('scroll', function() { if (dropdown.style.display === 'block') positionDropdown(); }, true);
+    window.addEventListener('resize', function() { if (dropdown.style.display === 'block') positionDropdown(); });
 
     document.addEventListener('click', function(e) {
       if (!document.getElementById('searchWrapper').contains(e.target)) {
