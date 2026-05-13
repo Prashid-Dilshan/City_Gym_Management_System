@@ -134,9 +134,7 @@
       font-size: 14px;
     }
 
-    thead tr {
-      background: var(--surface2);
-    }
+    thead tr { background: var(--surface2); }
     thead th {
       padding: 12px 16px;
       text-align: left;
@@ -173,6 +171,44 @@
     .member-name {
       font-weight: 600;
       color: #f0f0f0;
+    }
+
+    /* ── DAYS LEFT BADGES ── */
+    .days-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 11px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .days-badge i { font-size: 10px; }
+
+    /* Active — green */
+    .days-active {
+      background: rgba(0,200,80,0.10);
+      color: #00c860;
+      border: 1px solid rgba(0,200,80,0.22);
+    }
+    /* Warning ≤7 — orange */
+    .days-warning {
+      background: rgba(255,160,0,0.10);
+      color: #ffa000;
+      border: 1px solid rgba(255,160,0,0.22);
+    }
+    /* Expired — red */
+    .days-expired {
+      background: rgba(232,0,13,0.10);
+      color: var(--red);
+      border: 1px solid rgba(232,0,13,0.22);
+    }
+    /* No membership — muted */
+    .days-none {
+      background: rgba(255,255,255,0.04);
+      color: #555;
+      border: 1px solid rgba(255,255,255,0.07);
     }
 
     /* ── BUTTONS ── */
@@ -326,11 +362,8 @@
     .form-group input::placeholder { color: #3a3a3a; }
     .form-group select option { background: #1a1a1a; }
 
-    /* file input */
     .form-group input[type="file"] {
-      padding: 8px 12px;
-      color: #888;
-      cursor: pointer;
+      padding: 8px 12px; color: #888; cursor: pointer;
     }
     .form-group input[type="file"]::-webkit-file-upload-button {
       background: rgba(232,0,13,0.15);
@@ -359,15 +392,12 @@
       to   { opacity:1; transform: translateY(0); }
     }
 
-    /* Scrollbar */
     ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 4px; }
     ::-webkit-scrollbar-thumb:hover { background: #3a3a3a; }
 
-
-
-    /* ── TABLES ── */
+    /* ── SEARCH ── */
     .search-box {
       display: flex;
       align-items: center;
@@ -380,17 +410,11 @@
       padding: 10px 14px;
       transition: 0.25s;
     }
-
     .search-box:focus-within {
       border-color: rgba(232,0,13,0.55);
       box-shadow: 0 0 0 3px rgba(232,0,13,0.10);
     }
-
-    .search-box i {
-      color: var(--red);
-      font-size: 14px;
-    }
-
+    .search-box i { color: var(--red); font-size: 14px; }
     .search-box input {
       width: 100%;
       background: transparent;
@@ -400,13 +424,7 @@
       font-family: 'Outfit', sans-serif;
       font-size: 14px;
     }
-
-    .search-box input::placeholder {
-      color: #555;
-    }
-
-
-
+    .search-box input::placeholder { color: #555; }
   </style>
 </head>
 <body>
@@ -502,6 +520,7 @@
         <th>Package</th>
         <th>Start</th>
         <th>End</th>
+        <th>Days Left</th><%-- 🔥 NEW COLUMN --%>
         <th>Actions</th>
       </tr>
       </thead>
@@ -517,6 +536,40 @@
                ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
               hasMembers = true;
+
+              // 🔥 Calculate days left
+              String endDateStr = rs.getString("end_date");
+              String daysBadgeHtml;
+
+              if (endDateStr == null || endDateStr.trim().isEmpty()) {
+                daysBadgeHtml = "<span class='days-badge days-none'><i class='fa-solid fa-minus'></i> N/A</span>";
+              } else {
+                try {
+                  java.time.LocalDate endDate = java.time.LocalDate.parse(endDateStr);
+                  java.time.LocalDate today   = java.time.LocalDate.now();
+                  long daysLeft = java.time.temporal.ChronoUnit.DAYS.between(today, endDate);
+
+                  if (daysLeft < 0) {
+                    long overdue = Math.abs(daysLeft);
+                    daysBadgeHtml = "<span class='days-badge days-expired'>"
+                            + "<i class='fa-solid fa-circle-xmark'></i> Expired "
+                            + overdue + " day" + (overdue == 1 ? "" : "s") + " ago</span>";
+                  } else if (daysLeft == 0) {
+                    daysBadgeHtml = "<span class='days-badge days-warning'>"
+                            + "<i class='fa-solid fa-triangle-exclamation'></i> Expires Today</span>";
+                  } else if (daysLeft <= 7) {
+                    daysBadgeHtml = "<span class='days-badge days-warning'>"
+                            + "<i class='fa-solid fa-triangle-exclamation'></i> "
+                            + daysLeft + " day" + (daysLeft == 1 ? "" : "s") + " left</span>";
+                  } else {
+                    daysBadgeHtml = "<span class='days-badge days-active'>"
+                            + "<i class='fa-solid fa-circle-check'></i> "
+                            + daysLeft + " days left</span>";
+                  }
+                } catch (Exception ex) {
+                  daysBadgeHtml = "<span class='days-badge days-none'><i class='fa-solid fa-minus'></i> N/A</span>";
+                }
+              }
       %>
       <tr class="member-row"
           data-name="<%= rs.getString("full_name") != null ? rs.getString("full_name").toLowerCase() : "" %>"
@@ -528,14 +581,15 @@
         <td>
           <% if (rs.getObject("months") != null) { %>
           <span style="background:rgba(232,0,13,0.12); color:var(--red); padding:3px 10px; border-radius:20px; font-size:12px; font-weight:600; border:1px solid rgba(232,0,13,0.22);">
-    <%= rs.getInt("months") == 0 ? "1 Day" : rs.getInt("months") + " Mo" %>
-</span>
+            <%= rs.getInt("months") == 0 ? "1 Day" : rs.getInt("months") + " Mo" %>
+          </span>
           <% } else { %>
           <span style="color:var(--muted);">N/A</span>
           <% } %>
         </td>
         <td><%= rs.getString("start_date") != null ? rs.getString("start_date") : "–" %></td>
         <td><%= rs.getString("end_date")   != null ? rs.getString("end_date")   : "–" %></td>
+        <td><%=daysBadgeHtml%></td><%-- 🔥 DAYS LEFT CELL --%>
         <td>
           <div class="btn-actions">
             <a href="view-member?fid=<%= rs.getString("fingerprint_id") %>&mode=membership"
@@ -557,7 +611,7 @@
       } catch (Exception e) {
       %>
       <tr class="empty-row">
-        <td colspan="8">
+        <td colspan="9">
           <i class="fa-solid fa-circle-exclamation"></i>
           Error loading members: <%= e.getMessage() %>
         </td>
@@ -567,7 +621,7 @@
         if (!hasMembers) {
       %>
       <tr class="empty-row">
-        <td colspan="8">
+        <td colspan="9">
           <i class="fa-solid fa-users"></i>
           No members saved yet
         </td>
@@ -604,44 +658,23 @@
         <div class="form-group">
           <label>Phone *</label>
           <div style="display:flex; align-items:center; background: var(--surface2); border:1px solid var(--border); border-radius:10px; overflow:hidden;">
-    <span style="padding:10px 14px; color:#aaa; background:#1a1a1a; border-right:1px solid var(--border); font-weight:600;">
-      +94
-    </span>
-            <input
-                    type="text"
-                    name="phone"
-                    id="phone"
-                    placeholder="77XXXXXXX"
-                    maxlength="9"
-                    required
-                    pattern="[0-9]{9}"
-                    inputmode="numeric"
-                    oninput="onlyNumbers(this)"
-                    style="border:none; background:transparent; flex:1; box-shadow:none;"
-                    title="Enter 9 digit mobile number"
-            >
+            <span style="padding:10px 14px; color:#aaa; background:#1a1a1a; border-right:1px solid var(--border); font-weight:600;">+94</span>
+            <input type="text" name="phone" id="phone" placeholder="77XXXXXXX"
+                   maxlength="9" required pattern="[0-9]{9}" inputmode="numeric"
+                   oninput="onlyNumbers(this)"
+                   style="border:none; background:transparent; flex:1; box-shadow:none;"
+                   title="Enter 9 digit mobile number">
           </div>
         </div>
-
         <div class="form-group">
           <label>WhatsApp *</label>
           <div style="display:flex; align-items:center; background: var(--surface2); border:1px solid var(--border); border-radius:10px; overflow:hidden;">
-    <span style="padding:10px 14px; color:#aaa; background:#1a1a1a; border-right:1px solid var(--border); font-weight:600;">
-      +94
-    </span>
-            <input
-                    type="text"
-                    name="whatsapp"
-                    id="whatsapp"
-                    placeholder="77XXXXXXX"
-                    maxlength="9"
-                    required
-                    pattern="[0-9]{9}"
-                    inputmode="numeric"
-                    oninput="onlyNumbers(this)"
-                    style="border:none; background:transparent; flex:1; box-shadow:none;"
-                    title="Enter 9 digit WhatsApp number"
-            >
+            <span style="padding:10px 14px; color:#aaa; background:#1a1a1a; border-right:1px solid var(--border); font-weight:600;">+94</span>
+            <input type="text" name="whatsapp" id="whatsapp" placeholder="77XXXXXXX"
+                   maxlength="9" required pattern="[0-9]{9}" inputmode="numeric"
+                   oninput="onlyNumbers(this)"
+                   style="border:none; background:transparent; flex:1; box-shadow:none;"
+                   title="Enter 9 digit WhatsApp number">
           </div>
         </div>
         <div class="form-group">
@@ -693,8 +726,7 @@
         </div>
         <div class="form-group">
           <label>End Date</label>
-          <input type="date" id="endDate" name="endDate" readonly
-                 style="opacity:0.6; cursor:not-allowed;">
+          <input type="date" id="endDate" name="endDate" readonly style="opacity:0.6; cursor:not-allowed;">
         </div>
         <div class="form-group">
           <label>Membership Amount (Rs)</label>
@@ -731,7 +763,6 @@
     document.getElementById("overlay").classList.remove("open");
   }
 
-  // Close on overlay click
   document.getElementById("overlay").addEventListener("click", function(e) {
     if (e.target === this) closePopup();
   });
@@ -739,15 +770,12 @@
   function calc(duration) {
     const start = new Date(document.getElementById("startDate").value);
     if (isNaN(start)) return;
-
     const end = new Date(start);
-
     if (duration === "day") {
       end.setDate(end.getDate() + 1);
     } else {
       end.setMonth(end.getMonth() + parseInt(duration));
     }
-
     document.getElementById("endDate").value = end.toISOString().split("T")[0];
   }
 
@@ -756,16 +784,14 @@
     fetch('fingerprint-data?page=users')
             .then(res => res.text())
             .then(html => {
-              const parser = new DOMParser();
-              const doc = parser.parseFromString(html, 'text/html');
+              const parser  = new DOMParser();
+              const doc     = parser.parseFromString(html, 'text/html');
               const newTbody  = doc.querySelector("#newUsersTable");
               const currTbody = document.querySelector("#newUsersTable");
               if (newTbody && currTbody) {
                 currTbody.innerHTML = newTbody.innerHTML;
-
                 const section = document.getElementById("newFingerprintSection");
                 const hasRows = currTbody.querySelectorAll("tr:not(.empty-row)").length > 0;
-
                 section.style.display = hasRows ? "block" : "none";
               }
             });
@@ -778,19 +804,12 @@
   function searchMembers() {
     const keyword = document.getElementById("memberSearchInput").value.toLowerCase().trim();
     const rows = document.querySelectorAll(".member-row");
-
     rows.forEach(row => {
-      const name = row.getAttribute("data-name") || "";
-      const admission = row.getAttribute("data-admission") || "";
-
-      if (name.includes(keyword) || admission.includes(keyword)) {
-        row.style.display = "";
-      } else {
-        row.style.display = "none";
-      }
+      const name      = row.getAttribute("data-name")      || "";
+      const admission = row.getAttribute("data-admission")  || "";
+      row.style.display = (name.includes(keyword) || admission.includes(keyword)) ? "" : "none";
     });
   }
-
 </script>
 
 <script src="attendance-popup.js"></script>

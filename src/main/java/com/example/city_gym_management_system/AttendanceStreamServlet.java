@@ -15,26 +15,23 @@ public class AttendanceStreamServlet extends HttpServlet {
 
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
-        // Cache prevent
         response.setHeader("Cache-Control", "no-store");
 
-        // 🔥 JS එකෙන් lastSeen = UNIX timestamp of inserted_at
         String lastSeenStr = request.getParameter("lastSeen");
         long lastSeen = 0;
+
         if (lastSeenStr != null) {
-            try { lastSeen = Long.parseLong(lastSeenStr); } catch (Exception ignored) {}
+            try {
+                lastSeen = Long.parseLong(lastSeenStr);
+            } catch (Exception ignored) {}
         }
 
         PrintWriter out = response.getWriter();
 
         try (Connection con = DatabaseUtil.getConnection()) {
 
-            // 🔥 KEY FIX: scan_time නෙමෙයි — inserted_at use කරනවා
-            // inserted_at = server DB insert කළ real time
-            // ඒ නිසා restart කළාත් page load time ට පස්සේ
-            // insert වූ records විතරයි popup වෙන්නේ
             String sql =
-                    "SELECT md.full_name, md.admission_no, ms.end_date, " +
+                    "SELECT md.full_name, md.admission_no, md.fingerprint_id, ms.end_date, " +
                             "       al.scan_time, " +
                             "       UNIX_TIMESTAMP(al.inserted_at) AS ts " +
                             "FROM attendance_log al " +
@@ -44,29 +41,33 @@ public class AttendanceStreamServlet extends HttpServlet {
                             "ORDER BY al.inserted_at DESC LIMIT 1";
 
             try (PreparedStatement ps = con.prepareStatement(sql)) {
+
                 ps.setLong(1, lastSeen);
-                
+
                 try (ResultSet rs = ps.executeQuery()) {
+
                     if (rs.next()) {
+
                         String name     = rs.getString("full_name");
                         String admNo    = rs.getString("admission_no");
+                        String fid      = rs.getString("fingerprint_id");
                         String scanTime = rs.getString("scan_time");
-                        long   ts       = rs.getLong("ts");
+                        long ts         = rs.getLong("ts");
                         String endDate  = rs.getString("end_date");
 
-                        // Days remaining
-                        // Days remaining
                         String daysLeft = "-";
+
                         if (endDate != null) {
                             try {
-                                java.time.LocalDate end   = java.time.LocalDate.parse(endDate);
+                                java.time.LocalDate end = java.time.LocalDate.parse(endDate);
                                 java.time.LocalDate today = java.time.LocalDate.now();
 
                                 long days = java.time.temporal.ChronoUnit.DAYS.between(today, end);
 
                                 if (days < 0) {
                                     long expiredDays = Math.abs(days);
-                                    daysLeft = "Expired " + expiredDays + (expiredDays == 1 ? " day ago" : " days ago");
+                                    daysLeft = "Expired " + expiredDays +
+                                            (expiredDays == 1 ? " day ago" : " days ago");
                                 } else if (days == 0) {
                                     daysLeft = "Expires Today";
                                 } else {
@@ -78,21 +79,30 @@ public class AttendanceStreamServlet extends HttpServlet {
                             }
                         }
 
-                        // Time only HH:mm:ss
-                        String timeOnly = (scanTime != null && scanTime.length() >= 19)
-                                ? scanTime.substring(11, 19) : (scanTime != null ? scanTime : "");
+                        String timeOnly = "";
 
-                        // Safe JSON
-                        name  = safe(name);
+                        if (scanTime != null && scanTime.length() >= 19) {
+                            timeOnly = scanTime.substring(11, 19);
+                        } else if (scanTime != null) {
+                            timeOnly = scanTime;
+                        }
+
+                        name = safe(name);
                         admNo = safe(admNo);
+                        fid = safe(fid);
+                        daysLeft = safe(daysLeft);
+                        timeOnly = safe(timeOnly);
 
                         out.print("{" +
-                                "\"found\":true,"          +
-                                "\"name\":\""     + name     + "\"," +
-                                "\"admNo\":\""    + admNo    + "\"," +
-                                "\"time\":\""     + timeOnly + "\"," +
+                                "\"found\":true," +
+                                "\"fid\":\"" + fid + "\"," +
+                                "\"fingerprintId\":\"" + fid + "\"," +
+                                "\"fingerprint_id\":\"" + fid + "\"," +
+                                "\"name\":\"" + name + "\"," +
+                                "\"admNo\":\"" + admNo + "\"," +
+                                "\"time\":\"" + timeOnly + "\"," +
                                 "\"daysLeft\":\"" + daysLeft + "\"," +
-                                "\"ts\":"         + ts       +
+                                "\"ts\":" + ts +
                                 "}");
 
                     } else {
@@ -105,6 +115,7 @@ public class AttendanceStreamServlet extends HttpServlet {
             System.err.println("[DB ERROR] Attendance stream query failed: " + e.getMessage());
             e.printStackTrace();
             out.print("{\"found\":false,\"error\":\"" + safe(e.getMessage()) + "\"}");
+
         } catch (Exception e) {
             System.err.println("[APP ERROR] Attendance stream error: " + e.getMessage());
             e.printStackTrace();

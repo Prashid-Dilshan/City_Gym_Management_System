@@ -46,21 +46,22 @@
 
         setTimeout(function () {
             if (el.parentNode) el.parentNode.removeChild(el);
-
             var idx = popupQueue.indexOf(el);
             if (idx > -1) popupQueue.splice(idx, 1);
-
             repositionAll();
         }, 360);
     }
 
+    // ══════════════════════════════════════════════════════
+    // 🔥 FIX: popup click = new tab එකේ profile open වෙනවා
+    // ══════════════════════════════════════════════════════
     function openMemberProfile(fid) {
         if (!fid || String(fid).trim() === '') {
             alert('Member fingerprint ID not found.');
             return;
         }
-
-        window.location.href = base() + '/view-member?fid=' + encodeURIComponent(fid);
+        var url = base() + '/view-member?fid=' + encodeURIComponent(fid);
+        window.open(url, '_blank');
     }
 
     function poll() {
@@ -91,7 +92,7 @@
             parseInt(data.daysLeft) <= 7;
 
         var accentColor = expired ? '#e8000d' : warn ? '#ff5500' : '#e8000d';
-        var badgeText = expired ? 'MEMBERSHIP EXPIRED' : warn ? 'EXPIRING SOON' : 'ACTIVE';
+        var badgeText   = expired ? 'MEMBERSHIP EXPIRED' : warn ? 'EXPIRING SOON' : 'ACTIVE';
         var statusColor = expired ? '#e8000d' : warn ? '#ff5500' : '#00c860';
 
         var daysLabel = data.daysLeft;
@@ -100,7 +101,6 @@
             try {
                 var numPart = String(data.daysLeft).replace(/[^0-9\-]/g, '').trim();
                 var expDays = Math.abs(parseInt(numPart));
-
                 if (!isNaN(expDays) && expDays > 0) {
                     daysLabel = 'Expired ' + expDays + ' day' + (expDays === 1 ? '' : 's') + ' ago';
                 } else {
@@ -138,25 +138,18 @@
             '<div style="' +
             'background:#e8000d;' +
             'padding:13px 16px;' +
-            'display:flex;justify-content:space-between;align-items:center;' +
-            '">' +
+            'display:flex;justify-content:space-between;align-items:center;">' +
             '<div style="display:flex;align-items:center;gap:8px;">' +
-            '<div style="' +
-            'width:28px;height:28px;border-radius:50%;' +
-            'background:rgba(0,0,0,0.25);' +
-            'display:flex;align-items:center;justify-content:center;' +
-            'font-size:14px;' +
-            '">👆</div>' +
+            '<div style="width:28px;height:28px;border-radius:50%;background:rgba(0,0,0,0.25);' +
+            'display:flex;align-items:center;justify-content:center;font-size:14px;">👆</div>' +
             '<span style="color:#fff;font-weight:700;font-size:13px;letter-spacing:.5px;">NEW ATTENDANCE</span>' +
             '</div>' +
-
             '<div class="att-close-btn" style="' +
-            'width:24px;height:24px;border-radius:6px;' +
-            'background:rgba(0,0,0,0.30);' +
+            'width:24px;height:24px;border-radius:6px;background:rgba(0,0,0,0.30);' +
             'display:flex;align-items:center;justify-content:center;' +
             'color:#fff;cursor:pointer;font-size:14px;font-weight:bold;' +
-            'transition:background .2s;flex-shrink:0;' +
-            '" onmouseover="this.style.background=\'rgba(0,0,0,0.55)\'" ' +
+            'transition:background .2s;flex-shrink:0;" ' +
+            'onmouseover="this.style.background=\'rgba(0,0,0,0.55)\'" ' +
             'onmouseout="this.style.background=\'rgba(0,0,0,0.30)\'">&#x2715;</div>' +
             '</div>' +
 
@@ -164,14 +157,9 @@
 
             '<div style="display:flex;align-items:center;gap:11px;margin-bottom:14px;' +
             'padding-bottom:14px;border-bottom:1px solid rgba(255,255,255,0.07);">' +
-            '<div style="' +
-            'width:42px;height:42px;border-radius:50%;flex-shrink:0;' +
-            'background:#e8000d;' +
-            'display:flex;align-items:center;justify-content:center;' +
-            'color:#fff;font-size:18px;' +
-            'box-shadow:0 4px 14px rgba(232,0,13,0.5);' +
-            '">👤</div>' +
-
+            '<div style="width:42px;height:42px;border-radius:50%;flex-shrink:0;background:#e8000d;' +
+            'display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px;' +
+            'box-shadow:0 4px 14px rgba(232,0,13,0.5);">👤</div>' +
             '<div>' +
             '<div style="font-size:15px;font-weight:700;color:#fff;letter-spacing:.3px;">' + esc(data.name) + '</div>' +
             '<div style="font-size:11px;color:#777;margin-top:2px;">City Gym Hambantota — click to view profile</div>' +
@@ -192,11 +180,9 @@
 
             '</div>' +
 
-            '<div style="' +
-            'background:#1a1a1a;border:1px solid ' + accentColor + '55;' +
+            '<div style="background:#1a1a1a;border:1px solid ' + accentColor + '55;' +
             'border-radius:10px;padding:12px 14px;' +
-            'display:flex;justify-content:space-between;align-items:center;' +
-            '">' +
+            'display:flex;justify-content:space-between;align-items:center;">' +
             '<span style="font-size:12px;color:#888;">Membership Remaining</span>' +
             '<span style="color:' + statusColor + ';font-weight:800;font-size:15px;' +
             'font-family:\'Bebas Neue\',sans-serif;letter-spacing:1px;">' + esc(daysLabel) + '</span>' +
@@ -204,11 +190,9 @@
 
             '<div style="margin-top:10px;display:flex;justify-content:space-between;align-items:center;">' +
             '<span style="font-size:10px;color:#666;">Tap popup to open profile</span>' +
-            '<span style="' +
-            'background:' + accentColor + ';color:#fff;' +
+            '<span style="background:' + accentColor + ';color:#fff;' +
             'font-size:10px;font-weight:800;letter-spacing:1.5px;' +
-            'padding:4px 12px;border-radius:20px;' +
-            '">' + badgeText + '</span>' +
+            'padding:4px 12px;border-radius:20px;">' + badgeText + '</span>' +
             '</div>' +
 
             '</div>' +
@@ -216,10 +200,10 @@
             '<div style="height:3px;background:linear-gradient(90deg,transparent,' + accentColor + ',transparent);opacity:0.4;"></div>';
 
         document.body.appendChild(el);
-
         popupQueue.push(el);
         repositionAll();
 
+        // ── Close button ─────────────────────────────────────────────────────
         var closeBtn = el.querySelector('.att-close-btn');
         if (closeBtn) {
             closeBtn.addEventListener('click', function (e) {
@@ -228,10 +212,12 @@
             });
         }
 
+        // ── 🔥 Popup click → new tab profile ─────────────────────────────────
         el.addEventListener('click', function () {
             var clickedFid = el.getAttribute('data-fid');
             openMemberProfile(clickedFid);
         });
+
     }
 
     function esc(s) {
