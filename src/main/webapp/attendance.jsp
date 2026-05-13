@@ -560,7 +560,7 @@
                     } catch (Exception ignored) {}
                 }
 
-                // 🔥 membership type
+                // membership type
                 String logMonthsStr = log.get("months");
                 int logMonths = 0;
                 try { logMonths = Integer.parseInt(logMonthsStr); } catch (Exception ignored) {}
@@ -568,7 +568,7 @@
                 String typeClass = (logMonths == 0) ? "type-oneday" : "type-monthly";
 
                 String typeLabel = (logMonths == 0)
-                        ? "One Day"
+                        ? "1 Day"
                         : logMonths + " Month" + (logMonths == 1 ? "" : "s");
 
                 String logDate = log.get("date");
@@ -577,9 +577,8 @@
                 <td><span class="row-num"><%= i++ %></span></td>
                 <td><span class="adm-no"><%= logAdmission %></span></td>
                 <td>
-                    <% if (logMonths > 0) { %>
+                    <%-- 🔥 FIX: badge always shows for ALL members (removed if logMonths > 0 condition) --%>
                     <span class="type-badge <%= typeClass %>"><%= typeLabel %></span>
-                    <% } %>
                     <span class="member-name"><%= logName %></span>
                 </td>
                 <td>
