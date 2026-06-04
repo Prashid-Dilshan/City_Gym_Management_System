@@ -675,7 +675,7 @@
             // Type check
             let typeOk = false;
             if      (currentType === 'all')     typeOk = true;
-            else if (currentType === 'oneday')  typeOk = (rowMonths === 0 && rowDate === today);
+            else if (currentType === 'oneday')  typeOk = (rowMonths === 0);
             else if (currentType === 'monthly') typeOk = (rowMonths > 0);
 
             const show = dateOk && typeOk;
@@ -732,7 +732,7 @@
 
             if (inWindow) {
                 cAll++;
-                if (rowMonths === 0 && rowDate === today) cOneDay++;
+                if (rowMonths === 0) cOneDay++;
                 if (rowMonths > 0)   cMonthly++;
             }
         });
