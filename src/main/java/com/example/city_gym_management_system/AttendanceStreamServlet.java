@@ -31,7 +31,9 @@ public class AttendanceStreamServlet extends HttpServlet {
         try (Connection con = DatabaseUtil.getConnection()) {
 
             String sql =
-                    "SELECT md.full_name, md.admission_no, md.fingerprint_id, ms.end_date, " +
+                    "SELECT md.full_name, md.admission_no, md.fingerprint_id, " +
+                            "       ms.end_date, ms.months, " +
+                            "       DATE(al.scan_time) AS scan_date, " +
                             "       al.scan_time, " +
                             "       UNIX_TIMESTAMP(al.inserted_at) AS ts " +
                             "FROM attendance_log al " +
@@ -48,30 +50,53 @@ public class AttendanceStreamServlet extends HttpServlet {
 
                     if (rs.next()) {
 
-                        String name     = rs.getString("full_name");
-                        String admNo    = rs.getString("admission_no");
-                        String fid      = rs.getString("fingerprint_id");
-                        String scanTime = rs.getString("scan_time");
-                        long ts         = rs.getLong("ts");
-                        String endDate  = rs.getString("end_date");
+                        String name      = rs.getString("full_name");
+                        String admNo     = rs.getString("admission_no");
+                        String fid       = rs.getString("fingerprint_id");
+                        String scanTime  = rs.getString("scan_time");
+                        String scanDate  = rs.getString("scan_date");
+                        long   ts        = rs.getLong("ts");
+                        String endDate   = rs.getString("end_date");
+                        int    months    = 0;
+                        try { months = rs.getInt("months"); } catch (Exception ignored) {}
 
                         String daysLeft = "-";
 
                         if (endDate != null) {
                             try {
-                                java.time.LocalDate end = java.time.LocalDate.parse(endDate);
+                                java.time.LocalDate end   = java.time.LocalDate.parse(endDate);
                                 java.time.LocalDate today = java.time.LocalDate.now();
 
-                                long days = java.time.temporal.ChronoUnit.DAYS.between(today, end);
+                                // ── One Day member: expires at midnight of scan day ──
+                                if (months == 0) {
+                                    java.time.LocalDate scanDay =
+                                            (scanDate != null)
+                                                    ? java.time.LocalDate.parse(scanDate)
+                                                    : end; // fallback
 
-                                if (days < 0) {
-                                    long expiredDays = Math.abs(days);
-                                    daysLeft = "Expired " + expiredDays +
-                                            (expiredDays == 1 ? " day ago" : " days ago");
-                                } else if (days == 0) {
-                                    daysLeft = "Expires Today";
+                                    if (today.isAfter(scanDay)) {
+                                        long expiredDays = java.time.temporal.ChronoUnit.DAYS
+                                                .between(scanDay, today);
+                                        daysLeft = "Expired " + expiredDays +
+                                                (expiredDays == 1 ? " day ago" : " days ago");
+                                    } else {
+                                        // same day as scan → still active
+                                        daysLeft = "Expires Today";
+                                    }
+
+                                    // ── Monthly member: normal end_date logic ──
                                 } else {
-                                    daysLeft = days + (days == 1 ? " day" : " days");
+                                    long days = java.time.temporal.ChronoUnit.DAYS.between(today, end);
+
+                                    if (days < 0) {
+                                        long expiredDays = Math.abs(days);
+                                        daysLeft = "Expired " + expiredDays +
+                                                (expiredDays == 1 ? " day ago" : " days ago");
+                                    } else if (days == 0) {
+                                        daysLeft = "Expires Today";
+                                    } else {
+                                        daysLeft = days + (days == 1 ? " day" : " days");
+                                    }
                                 }
 
                             } catch (Exception ignored) {
@@ -80,16 +105,15 @@ public class AttendanceStreamServlet extends HttpServlet {
                         }
 
                         String timeOnly = "";
-
                         if (scanTime != null && scanTime.length() >= 19) {
                             timeOnly = scanTime.substring(11, 19);
                         } else if (scanTime != null) {
                             timeOnly = scanTime;
                         }
 
-                        name = safe(name);
-                        admNo = safe(admNo);
-                        fid = safe(fid);
+                        name     = safe(name);
+                        admNo    = safe(admNo);
+                        fid      = safe(fid);
                         daysLeft = safe(daysLeft);
                         timeOnly = safe(timeOnly);
 

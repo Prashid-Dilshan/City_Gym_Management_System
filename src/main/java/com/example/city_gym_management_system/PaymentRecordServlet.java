@@ -35,7 +35,7 @@ public class PaymentRecordServlet extends HttpServlet {
 				"md.full_name, md.whatsapp " +
 				"FROM payment_history ph " +
 				"JOIN member_details md ON md.id = ph.member_id " +
-				"ORDER BY ph.payment_date DESC, ph.id DESC LIMIT 10";
+				"ORDER BY ph.payment_date DESC, ph.id DESC";
 
 		List<Map<String, Object>> payments = new ArrayList<>();
 		try (PreparedStatement ps = con.prepareStatement(sql);

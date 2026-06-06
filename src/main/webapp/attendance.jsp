@@ -537,39 +537,53 @@
                     continue;
                 }
 
-                String daysLeft   = log.get("daysLeft");
-                String cssClass   = "badge-active";
-                String icon       = "fa-circle-check";
-                String badgeLabel = daysLeft;
-
-                if (daysLeft != null && daysLeft.startsWith("Expired")) {
-                    cssClass = "badge-expired";
-                    icon     = "fa-circle-xmark";
-                    try {
-                        String numPart = daysLeft.replaceAll("[^0-9\\-]", "").trim();
-                        int expDays = Math.abs(Integer.parseInt(numPart));
-                        badgeLabel = "Expired " + expDays + " day" + (expDays == 1 ? "" : "s") + " ago";
-                    } catch (Exception ex) {
-                        badgeLabel = daysLeft;
-                    }
-                } else if (daysLeft != null && !"-".equals(daysLeft)) {
-                    try {
-                        int d = Integer.parseInt(daysLeft.replace(" days","").trim());
-                        if (d <= 7) { cssClass = "badge-warning"; icon = "fa-triangle-exclamation"; }
-                        badgeLabel = d + " day" + (d == 1 ? "" : "s") + " left";
-                    } catch (Exception ignored) {}
-                }
-
-                // membership type
+                // ── membership type ──────────────────────────────────────────
                 String logMonthsStr = log.get("months");
                 int logMonths = 0;
                 try { logMonths = Integer.parseInt(logMonthsStr); } catch (Exception ignored) {}
 
                 String typeClass = (logMonths == 0) ? "type-oneday" : "type-monthly";
-
                 String typeLabel = (logMonths == 0)
                         ? "1 Day"
                         : logMonths + " Month" + (logMonths == 1 ? "" : "s");
+
+                // ── daysLeft badge logic ──────────────────────────────────────
+                // For One Day members the servlet now sends:
+                //   "Expires Today"        → scanned today, still active
+                //   "Expired N day(s) ago" → scanned on a previous day
+                // For Monthly members the normal days-remaining logic applies.
+
+                String daysLeft   = log.get("daysLeft");
+                String cssClass   = "badge-active";
+                String icon       = "fa-circle-check";
+                String badgeLabel = (daysLeft != null) ? daysLeft : "-";
+
+                if (daysLeft != null && daysLeft.startsWith("Expired")) {
+                    // ── expired ──────────────────────────────────────────────
+                    cssClass = "badge-expired";
+                    icon     = "fa-circle-xmark";
+                    try {
+                        String numPart = daysLeft.replaceAll("[^0-9]", "").trim();
+                        int expDays = Integer.parseInt(numPart);
+                        badgeLabel = "Expired " + expDays + " day" + (expDays == 1 ? "" : "s") + " ago";
+                    } catch (Exception ex) {
+                        badgeLabel = daysLeft;
+                    }
+
+                } else if ("Expires Today".equals(daysLeft)) {
+                    // ── expires today (One Day active / Monthly last day) ─────
+                    cssClass   = "badge-warning";
+                    icon       = "fa-triangle-exclamation";
+                    badgeLabel = "Expires Today";
+
+                } else if (daysLeft != null && !"-".equals(daysLeft)) {
+                    // ── N days remaining (Monthly) ────────────────────────────
+                    try {
+                        int d = Integer.parseInt(daysLeft.replace(" days", "").replace(" day", "").trim());
+                        if (d <= 7) { cssClass = "badge-warning"; icon = "fa-triangle-exclamation"; }
+                        badgeLabel = d + " day" + (d == 1 ? "" : "s") + " left";
+                    } catch (Exception ignored) {}
+                }
 
                 String logDate = log.get("date");
             %>
@@ -577,7 +591,6 @@
                 <td><span class="row-num"><%= i++ %></span></td>
                 <td><span class="adm-no"><%= logAdmission %></span></td>
                 <td>
-                    <%-- 🔥 FIX: badge always shows for ALL members (removed if logMonths > 0 condition) --%>
                     <span class="type-badge <%= typeClass %>"><%= typeLabel %></span>
                     <span class="member-name"><%= logName %></span>
                 </td>
@@ -668,11 +681,11 @@
 
             // Date check
             let dateOk = false;
-            if      (currentDate === 'today')   dateOk = (rowDate === today);
-            else if (currentDate === '7days')   dateOk = (rowDate >= cut7  && rowDate <= today);
-            else if (currentDate === '30days')  dateOk = (rowDate >= cut30 && rowDate <= today);
+            if      (currentDate === 'today')  dateOk = (rowDate === today);
+            else if (currentDate === '7days')  dateOk = (rowDate >= cut7  && rowDate <= today);
+            else if (currentDate === '30days') dateOk = (rowDate >= cut30 && rowDate <= today);
 
-            // Type check
+            // Type check — no date restriction on oneday anymore
             let typeOk = false;
             if      (currentType === 'all')     typeOk = true;
             else if (currentType === 'oneday')  typeOk = (rowMonths === 0);
@@ -702,7 +715,7 @@
     }
 
     // ── Update tab counts ─────────────────────────────────────────────────────
-    // Date row  → always shows total for that range (type-agnostic)
+    // Date row  → total for that range (type-agnostic)
     // Type row  → counts within the CURRENT date window only
     function updateTabCounts() {
         const tbody = document.getElementById('attendanceTable');
