@@ -238,6 +238,8 @@
             display: block;
         }
 
+        .topbar { gap: 12px; } /* existing eke gap add karanna, already tiyenawa nam skip */
+
         /* ══════════════════════════════
            ACTIVE STATE SCRIPT HELPER
         ══════════════════════════════ */
@@ -284,12 +286,75 @@
 </div>
 
 <!-- ── TOP BAR ── -->
+<!-- ── TOP BAR ── -->
 <div class="topbar">
     <div class="topbar-hamburger"><i class=""></i></div>
 
     <div class="topbar-title">
         <span>Admin</span> Dashboard
     </div>
+
+    <%-- ══ BIRTHDAY ICON ══ --%>
+    <div style="position:relative;" id="bdBellWrap">
+        <div id="bdBell"
+             onclick="toggleBdPanel()"
+             style="width:40px;height:40px;border-radius:11px;background:rgba(232,0,13,0.10);border:1px solid rgba(232,0,13,0.22);
+                    display:flex;align-items:center;justify-content:center;cursor:pointer;transition:0.2s;"
+             onmouseover="this.style.background='rgba(232,0,13,0.18)'"
+             onmouseout="this.style.background='rgba(232,0,13,0.10)'"
+             title="Today's Birthdays">
+            <i class="fa-solid fa-cake-candles" style="color:#e8000d;font-size:16px;"></i>
+        </div>
+        <%-- Badge - server side count inject wenawa --%>
+        <span id="bdBadge"
+              style="position:absolute;top:-5px;right:-5px;min-width:18px;height:18px;
+                     border-radius:9px;background:#e8000d;color:#fff;font-size:10px;font-weight:700;
+                     display:none;align-items:center;justify-content:center;
+                     border:2px solid var(--surface);padding:0 3px;">0</span>
+
+        <%-- Dropdown Panel --%>
+        <div id="bdPanel"
+             style="display:none;position:absolute;top:50px;right:0;width:320px;
+                    background:var(--surface);border:1px solid rgba(255,255,255,0.09);
+                    border-radius:14px;z-index:999;overflow:hidden;
+                    box-shadow:0 8px 32px rgba(0,0,0,0.5);">
+
+            <div style="padding:13px 16px;border-bottom:1px solid var(--border);
+                        display:flex;align-items:center;justify-content:space-between;">
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <i class="fa-solid fa-cake-candles" style="color:#e8000d;font-size:14px;"></i>
+                    <span style="font-size:13px;font-weight:600;">Today's Birthdays</span>
+                </div>
+                <span id="bdCountBadge"
+                      style="background:rgba(232,0,13,0.12);color:#e8000d;font-size:11px;font-weight:700;
+                             padding:3px 10px;border-radius:20px;border:1px solid rgba(232,0,13,0.22);">
+                    Loading...
+                </span>
+            </div>
+
+            <div id="bdList"
+                 style="max-height:280px;overflow-y:auto;padding:10px 12px;
+                        display:flex;flex-direction:column;gap:7px;">
+                <div style="color:#555;font-size:13px;text-align:center;padding:20px;">
+                    <i class="fa-solid fa-spinner fa-spin"></i>
+                </div>
+            </div>
+
+            <div style="padding:11px 12px;border-top:1px solid var(--border);">
+                <a href="birthday-members" target="contentFrame"
+                   onclick="setActive(document.querySelector('.nav-item[href=\'birthday-members\']') || document.querySelector('.nav-item'))"
+                   style="display:block;width:100%;padding:9px;
+                          background:linear-gradient(135deg,#e8000d,#9a0008);
+                          border-radius:10px;text-align:center;font-size:13px;
+                          font-weight:600;color:#fff;cursor:pointer;text-decoration:none;">
+                    <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:11px;"></i>
+                    View All Birthday Members
+                </a>
+            </div>
+        </div>
+    </div>
+    <%-- ══ END BIRTHDAY ICON ══ --%>
+
 </div>
 
 <!-- ── CONTENT ── -->
@@ -303,6 +368,112 @@
         document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
         el.classList.add('active');
     }
+
+
+    // ── BIRTHDAY PANEL ──
+    let bdLoaded = false;
+
+    function toggleBdPanel() {
+        const panel = document.getElementById('bdPanel');
+        const isOpen = panel.style.display === 'block';
+        panel.style.display = isOpen ? 'none' : 'block';
+        if (!isOpen && !bdLoaded) {
+            loadBirthdayData();
+        }
+    }
+
+    function loadBirthdayData() {
+        fetch('birthday-members?format=json')
+            .then(r => r.json())
+            .then(data => {
+                bdLoaded = true;
+                renderBirthdayPanel(data);
+            })
+            .catch(err => {
+                console.error('Birthday fetch error:', err);
+                document.getElementById('bdList').innerHTML =
+                    '<div style="color:#555;font-size:13px;text-align:center;padding:20px;">Failed to load</div>';
+            });
+    }
+
+    function renderBirthdayPanel(data) {
+        const count      = data.length;
+        const badge      = document.getElementById('bdBadge');
+        const countBadge = document.getElementById('bdCountBadge');
+        const list       = document.getElementById('bdList');
+
+        // ── Update count badge (top-right icon badge) ──
+        if (count > 0) {
+            badge.style.display   = 'flex';
+            badge.textContent     = count;
+        } else {
+            badge.style.display   = 'none';
+        }
+
+        // ── Update dropdown header count ──
+        countBadge.textContent = count + (count === 1 ? ' member' : ' members');
+
+        // ── Render member list ──
+        if (count === 0) {
+            list.innerHTML = '<div style="color:#555;font-size:13px;text-align:center;padding:24px;">' +
+                '<i class="fa-solid fa-face-sad-tear" style="font-size:22px;display:block;margin-bottom:8px;color:#333;"></i>' +
+                'No birthdays today</div>';
+            return;
+        }
+
+        list.innerHTML = data.map(function(m) {
+            // Safe fallbacks - name and admissionNo must show
+            var name        = m.name        || 'Unknown';
+            var admissionNo = m.admissionNo || '–';
+            var fid         = m.fid         || '';
+            var firstLetter = name.charAt(0).toUpperCase();
+
+            return '<div onclick="openMember(\'' + fid + '\')" ' +
+                'style="display:flex;align-items:center;gap:10px;padding:9px 11px;' +
+                'background:var(--surface2);border-radius:10px;' +
+                'border:1px solid var(--border);cursor:pointer;transition:0.18s;margin-bottom:6px;" ' +
+                'onmouseover="this.style.borderColor=\'rgba(232,0,13,0.35)\'" ' +
+                'onmouseout="this.style.borderColor=\'var(--border)\'">' +
+
+                '<div style="width:36px;height:36px;border-radius:50%;' +
+                'background:rgba(232,0,13,0.14);border:1.5px solid rgba(232,0,13,0.35);' +
+                'display:flex;align-items:center;justify-content:center;' +
+                'font-size:15px;font-weight:700;color:#e8000d;flex-shrink:0;">' +
+                firstLetter + '</div>' +
+
+                '<div style="flex:1;min-width:0;">' +
+                '<div style="font-size:13px;font-weight:600;color:#f0f0f0;' +
+                'white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + name + '</div>' +
+                '<div style="font-size:11px;color:#555;margin-top:1px;">' +
+                'ID: ' + admissionNo + ' &nbsp;·&nbsp; 🎂 Birthday today</div>' +
+                '</div>' +
+
+                '<i class="fa-solid fa-arrow-right" style="color:#333;font-size:11px;flex-shrink:0;"></i>' +
+                '</div>';
+        }).join('');
+    }
+
+    function openMember(fid) {
+        if (!fid) return;
+        document.getElementById('bdPanel').style.display = 'none';
+        // Load member profile in the iframe
+        document.getElementById('contentFrame').src = 'view-member?fid=' + encodeURIComponent(fid);
+    }
+
+    // Close panel when clicking outside
+    document.addEventListener('click', function(e) {
+        var wrap = document.getElementById('bdBellWrap');
+        if (wrap && !wrap.contains(e.target)) {
+            var panel = document.getElementById('bdPanel');
+            if (panel) panel.style.display = 'none';
+        }
+    });
+
+    // ── AUTO LOAD on page start - badge show wenawa ──
+    window.addEventListener('load', function() {
+        loadBirthdayData();
+    });
+
 </script>
 </body>
 </html>
